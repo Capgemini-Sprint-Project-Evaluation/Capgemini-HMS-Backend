@@ -209,14 +209,54 @@ capgemini-hms-backend/
 │   │   │                   └── mapper
 │   │   │
 │   │   └── resources
-│   │       ├── application.properties
-│   │       ├── application-dev.properties
-│   │       ├── application-prod.properties
-│   │       ├── db
-│   │       │   ├── schema.sql
-│   │       │   └── data.sql
-│   │       ├── static
-│   │       └── templates
+│   │       ├── application.properties              # Default configuration
+│   │       ├── application-dev.properties          # Development environment config
+│   │       ├── application-prod.properties         # Production environment config
+│   │       │
+│   │       ├── db                                  # Database scripts
+│   │       │   ├── schema.sql                      # Table creation scripts
+│   │       │   └── data.sql                        # Initial/sample data
+│   │       │
+│   │       ├── templates                           # Thymeleaf HTML templates (View Layer)
+│   │       │   ├── index.html                      # Dashboard / Home page
+│   │       │   │
+│   │       │   ├── patient/                        # Patient UI pages
+│   │       │   │   ├── list.html
+│   │       │   │   ├── create.html
+│   │       │   │   └── edit.html
+│   │       │   │
+│   │       │   ├── physician/                      # Doctor UI pages
+│   │       │   │   ├── list.html
+│   │       │   │   └── create.html
+│   │       │   │
+│   │       │   ├── appointment/                    # Appointment UI pages
+│   │       │   │   ├── list.html
+│   │       │   │   └── create.html
+│   │       │   │
+│   │       │   ├── room/                           # Room & stay management UI
+│   │       │   ├── medication/                    # Medication UI
+│   │       │   ├── prescription/                  # Prescription UI
+│   │       │   │
+│   │       │   ├── fragments/                      # Reusable UI components
+│   │       │   │   ├── header.html
+│   │       │   │   ├── footer.html
+│   │       │   │   └── sidebar.html
+│   │       │   │
+│   │       │   └── error/                          # Error pages
+│   │       │       ├── 404.html
+│   │       │       └── 500.html
+│   │       │
+│   │       ├── static                              # Static assets (CSS, JS, Images)
+│   │       │   ├── css/
+│   │       │   │   └── styles.css
+│   │       │   │
+│   │       │   ├── js/
+│   │       │   │   └── main.js
+│   │       │   │
+│   │       │   ├── images/
+│   │       │   └── vendor/                         # Bootstrap / external libraries (optional)
+│   │       │
+│   │       └── messages.properties                 # Thymeleaf internationalization (optional)
 │   │
 │   └── test
 │       └── java
