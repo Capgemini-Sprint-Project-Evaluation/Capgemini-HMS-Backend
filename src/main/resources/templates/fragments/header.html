@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title} + ' | Capgemini HMS'">Capgemini HMS</title>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+    
+    <!-- Top Header -->
+    <header th:fragment="topbar" class="top-header">
+        <div class="header-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Search patients, doctors, etc...">
+        </div>
+        <div class="header-user">
+            <div class="user-info" style="text-align: right;">
+                <p style="font-size: 0.875rem; font-weight: 600; margin:0;">Welcome, Admin</p>
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin:0;">Super Administrator</p>
+            </div>
+            <div class="avatar">
+                AD
+            </div>
+        </div>
+    </header>
+
+</body>
+</html>
