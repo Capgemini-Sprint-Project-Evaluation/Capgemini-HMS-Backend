@@ -1,0 +1,37 @@
+package com.capgemini.hms.exception;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+import java.util.Map;
+
+@Data
+@NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class ErrorResponse {
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime timestamp;
+    private int status;
+    private String error;
+    private String message;
+    private String path;
+    private Map<String, String> details;
+
+    public ErrorResponse(int status, String error, String message, String path) {
+        this(status, error, message, path, null);
+    }
+
+    public ErrorResponse(int status, String error, String message, String path, Map<String, String> details) {
+        this.status = status;
+        this.error = error;
+        this.message = message;
+        this.path = path;
+        this.details = details;
+        this.timestamp = LocalDateTime.now();
+    }
+}
