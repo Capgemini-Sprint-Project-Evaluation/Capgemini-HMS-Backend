@@ -30,6 +30,7 @@ public class PhysicianController {
         this.staffService = staffService;
     }
 
+<<<<<<< main
     @GetMapping
     @Operation(summary = "Get all physicians", description = "Returns a paginated list of all active physicians")
     public ResponseEntity<ApiResponse<PagedResponse<PhysicianDTO>>> getAllPhysicians(Pageable pageable) {
@@ -50,3 +51,5 @@ public class PhysicianController {
     }
 
 
+=======
+>>>>>>> develop
