@@ -91,5 +91,6 @@ public class MedicationController {
     private Medication convertToEntity(MedicationDTO dto) {
         return new Medication(dto.getCode(), dto.getName(), dto.getBrand(), dto.getDescription());
     }
+    
 }
 
