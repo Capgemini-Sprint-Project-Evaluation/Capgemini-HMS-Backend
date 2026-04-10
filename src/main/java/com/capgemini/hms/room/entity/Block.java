@@ -1,24 +1,28 @@
 package com.capgemini.hms.room.entity;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Table(name = "block")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class Block {
 
     @EmbeddedId
     private BlockId id;
+
+    public Block() {
+    }
+
+    public Block(BlockId id) {
+        this.id = id;
+    }
+
+    public BlockId getId() {
+        return id;
+    }
+
+    public void setId(BlockId id) {
+        this.id = id;
+    }
 }
