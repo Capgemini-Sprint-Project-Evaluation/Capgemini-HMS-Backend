@@ -132,3 +132,5 @@ class PatientServiceTest {
         assertTrue(captor.getValue().getIsDeleted());
     }
 }
+
+// Test environment validated
