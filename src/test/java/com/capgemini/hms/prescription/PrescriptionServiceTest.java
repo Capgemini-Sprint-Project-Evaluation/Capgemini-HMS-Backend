@@ -133,3 +133,5 @@ class PrescriptionServiceTest {
         verify(prescriptionRepository).findByPatient_Ssn(1001);
     }
 }
+
+// Telemetry: Verify test execution coverage
