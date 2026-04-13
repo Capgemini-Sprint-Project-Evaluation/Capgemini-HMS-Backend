@@ -24,9 +24,23 @@ public class PatientService {
 
     @Transactional
     public Patient registerPatient(Patient patient) {
-        if (patientRepository.existsById(patient.getSsn())) {
-            throw new RuntimeException("Patient with SSN " + patient.getSsn() + " already exists.");
+        Optional<Patient> existing = patientRepository.findById(patient.getSsn());
+        
+        if (existing.isPresent()) {
+            Patient existingPatient = existing.get();
+            if (!existingPatient.getIsDeleted()) {
+                throw new RuntimeException("Patient with SSN " + patient.getSsn() + " already exists and is active.");
+            }
+            // Reactivate and update
+            existingPatient.setName(patient.getName());
+            existingPatient.setAddress(patient.getAddress());
+            existingPatient.setPhone(patient.getPhone());
+            existingPatient.setInsuranceId(patient.getInsuranceId());
+            existingPatient.setPcp(patient.getPcp());
+            existingPatient.setIsDeleted(false);
+            return patientRepository.save(existingPatient);
         }
+
         patient.setIsDeleted(false);
         return patientRepository.save(patient);
     }
