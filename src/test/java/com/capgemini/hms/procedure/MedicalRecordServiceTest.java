@@ -134,3 +134,5 @@ class MedicalRecordServiceTest {
         assertEquals(1, result.size());
     }
 }
+
+// Telemetry: Verify test execution coverage
