@@ -32,6 +32,7 @@ public class User {
     private String password;
 
     private Integer patientSsn;
+    private Integer staffId;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "user_roles",
@@ -94,5 +95,13 @@ public class User {
 
     public void setPatientSsn(Integer patientSsn) {
         this.patientSsn = patientSsn;
+    }
+
+    public Integer getStaffId() {
+        return staffId;
+    }
+
+    public void setStaffId(Integer staffId) {
+        this.staffId = staffId;
     }
 }
