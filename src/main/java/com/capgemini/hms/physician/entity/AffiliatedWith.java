@@ -8,19 +8,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Table(name = "affiliated_with")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class AffiliatedWith {
 
     @EmbeddedId
@@ -38,4 +28,46 @@ public class AffiliatedWith {
 
     @Column(name = "primaryaffiliation", nullable = false)
     private Boolean primaryAffiliation;
+
+    public AffiliatedWith() {
+    }
+
+    public AffiliatedWith(AffiliatedWithId id, Physician physician, Department department, Boolean primaryAffiliation) {
+        this.id = id;
+        this.physician = physician;
+        this.department = department;
+        this.primaryAffiliation = primaryAffiliation;
+    }
+
+    public AffiliatedWithId getId() {
+        return id;
+    }
+
+    public void setId(AffiliatedWithId id) {
+        this.id = id;
+    }
+
+    public Physician getPhysician() {
+        return physician;
+    }
+
+    public void setPhysician(Physician physician) {
+        this.physician = physician;
+    }
+
+    public Department getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(Department department) {
+        this.department = department;
+    }
+
+    public Boolean getPrimaryAffiliation() {
+        return primaryAffiliation;
+    }
+
+    public void setPrimaryAffiliation(Boolean primaryAffiliation) {
+        this.primaryAffiliation = primaryAffiliation;
+    }
 }
