@@ -32,7 +32,6 @@ public class StayController {
     }
 
     @GetMapping("/my")
-    @PreAuthorize("hasRole('PATIENT')")
     @Operation(summary = "Get my stays", description = "Returns all hospital admission records for the current logged-in patient")
     public ResponseEntity<ApiResponse<List<StayResponse>>> getMyStays() {
         Integer ssn = getAuthenticatedPatientSsn();
@@ -43,7 +42,6 @@ public class StayController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'NURSE')")
     @Operation(summary = "Get all stays", description = "Returns a paginated list of all active and historical stays")
     public ResponseEntity<ApiResponse<PagedResponse<StayResponse>>> getAllStays(Pageable pageable) {
         Page<Stay> page = stayService.getAllStays(pageable);
@@ -55,7 +53,6 @@ public class StayController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'NURSE')")
     @Operation(summary = "New patient stay (Check-in)", description = "Admits a patient into a specific room")
     public ResponseEntity<ApiResponse<StayResponse>> checkIn(@Valid @RequestBody StayRequest request) {
         Stay stay = stayService.checkInPatient(
@@ -67,7 +64,6 @@ public class StayController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'NURSE') or (hasRole('PATIENT') and @stayService.getStayById(#id).orElse(null)?.patient?.ssn == principal.patientSsn)")
     @Operation(summary = "Get stay details", description = "Returns detailed information for a specific stay ID")
     public ResponseEntity<ApiResponse<StayResponse>> getStayById(@PathVariable Integer id) {
         return stayService.getStayById(id)
@@ -76,7 +72,6 @@ public class StayController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'NURSE')")
     @Operation(summary = "Update or finalize stay (Check-out)", description = "Updates stay notes or records a discharge time")
     public ResponseEntity<ApiResponse<StayResponse>> updateStay(@PathVariable Integer id, @RequestParam(required = false) String notes) {
         Stay stay = stayService.checkOutPatient(id, notes);
@@ -84,7 +79,6 @@ public class StayController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Delete stay record", description = "Performs a soft-delete on a stay record")
     public ResponseEntity<ApiResponse<String>> deleteStay(@PathVariable Integer id) {
         stayService.deleteStay(id);
@@ -92,7 +86,6 @@ public class StayController {
     }
 
     @GetMapping("/active")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'NURSE')")
     @Operation(summary = "List active inpatients", description = "Returns all patients currently admitted")
     public ResponseEntity<ApiResponse<List<StayResponse>>> getActiveStays() {
         List<StayResponse> active = stayService.getActiveStays().stream()
