@@ -44,6 +44,56 @@ public class RoomController {
         return ResponseEntity.ok(ApiResponse.success(pagedResponse));
     }
 
+    @GetMapping("/available")
+    @Operation(summary = "Get available rooms", description = "Returns a list of all rooms that are currently unoccupied and active")
+    public ResponseEntity<ApiResponse<List<RoomDTO>>> getAvailableRooms() {
+        List<Room> rooms = roomService.getAvailableRooms();
+        List<RoomDTO> content = rooms.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.success(content));
+    }
+
+    @GetMapping("/unavailable")
+    @Operation(summary = "Get unavailable rooms", description = "Returns a list of all rooms that are currently occupied or under maintenance")
+    public ResponseEntity<ApiResponse<List<RoomDTO>>> getUnavailableRooms() {
+        List<Room> rooms = roomService.getUnavailableRooms();
+        List<RoomDTO> content = rooms.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.success(content));
+    }
+
+    @GetMapping("/type/{roomType}")
+    @Operation(summary = "Get rooms by type", description = "Returns a list of rooms filtered by type (e.g., 'Single', 'Double', 'ICU')")
+    public ResponseEntity<ApiResponse<List<RoomDTO>>> getRoomsByType(@PathVariable String roomType) {
+        List<Room> rooms = roomService.getRoomsByType(roomType);
+        List<RoomDTO> content = rooms.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.success(content));
+    }
+
+    @GetMapping("/available/type/{roomType}")
+    @Operation(summary = "Get available rooms by type", description = "Returns unoccupied rooms of a specific type")
+    public ResponseEntity<ApiResponse<List<RoomDTO>>> getAvailableRoomsByType(@PathVariable String roomType) {
+        List<Room> rooms = roomService.getAvailableRoomsByType(roomType);
+        List<RoomDTO> content = rooms.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.success(content));
+    }
+
+    @GetMapping("/unavailable/type/{roomType}")
+    @Operation(summary = "Get unavailable rooms by type", description = "Returns occupied rooms of a specific type")
+    public ResponseEntity<ApiResponse<List<RoomDTO>>> getUnavailableRoomsByType(@PathVariable String roomType) {
+        List<Room> rooms = roomService.getUnavailableRoomsByType(roomType);
+        List<RoomDTO> content = rooms.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.success(content));
+    }
+
     @GetMapping("/{roomNumber}")
     @Operation(summary = "Get room by number", description = "Returns details for a specific active room")
     public ResponseEntity<ApiResponse<RoomDTO>> getRoomByNumber(@PathVariable Integer roomNumber) {
