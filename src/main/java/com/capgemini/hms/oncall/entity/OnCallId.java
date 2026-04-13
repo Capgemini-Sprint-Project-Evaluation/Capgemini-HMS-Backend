@@ -1,5 +1,8 @@
 package com.capgemini.hms.oncall.entity;
 
+
+import com.capgemini.hms.room.entity.BlockId;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 
@@ -9,7 +12,6 @@ import java.util.Objects;
 
 @Embeddable
 public class OnCallId implements Serializable {
-
     @Column(name = "nurse")
     private Integer nurse;
 

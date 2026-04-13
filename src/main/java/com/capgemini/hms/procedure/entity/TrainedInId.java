@@ -1,12 +1,16 @@
 package com.capgemini.hms.procedure.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import java.io.Serializable;
 import java.util.Objects;
 
 @Embeddable
 public class TrainedInId implements Serializable {
+    @Column(name = "physician")
     private Integer physician;
+
+    @Column(name = "treatment")
     private Integer treatment;
 
     public TrainedInId() {

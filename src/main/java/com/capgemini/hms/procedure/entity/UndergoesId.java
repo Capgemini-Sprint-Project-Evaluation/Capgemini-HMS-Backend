@@ -1,5 +1,6 @@
 package com.capgemini.hms.procedure.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -7,11 +8,16 @@ import java.util.Objects;
 
 @Embeddable
 public class UndergoesId implements Serializable {
+    @Column(name = "patient")
     private Integer patient;
 
-    @jakarta.persistence.Column(name = "`procedure`")
+    @Column(name = "`procedure`")
     private Integer procedure;
+
+    @Column(name = "stay")
     private Integer stay;
+
+    @Column(name = "dateundergoes")
     private LocalDateTime dateUndergoes;
 
     public UndergoesId() {
