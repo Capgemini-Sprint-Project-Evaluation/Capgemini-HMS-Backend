@@ -37,7 +37,6 @@ public class PatientController {
     }
 
     @GetMapping("/me")
-    @PreAuthorize("hasRole('PATIENT')")
     @Operation(summary = "Get my profile", description = "Returns the clinical profile of the current logged-in patient")
     public ResponseEntity<ApiResponse<PatientDTO>> getMyProfile() {
         Integer ssn = getAuthenticatedPatientSsn();
@@ -47,7 +46,6 @@ public class PatientController {
     }
 
     @PutMapping("/me")
-    @PreAuthorize("hasRole('PATIENT')")
     @Operation(summary = "Update my profile", description = "Allows a patient to update their own contact information")
     public ResponseEntity<ApiResponse<PatientDTO>> updateMyProfile(@Valid @RequestBody PatientDTO dto) {
         Integer ssn = getAuthenticatedPatientSsn();
