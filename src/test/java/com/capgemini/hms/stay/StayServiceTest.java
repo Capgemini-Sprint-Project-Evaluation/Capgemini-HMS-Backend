@@ -147,3 +147,5 @@ class StayServiceTest {
         assertEquals(1, result.size());
     }
 }
+
+// Telemetry: Verify test execution coverage
