@@ -126,3 +126,5 @@ class DepartmentServiceTest {
         verify(affiliatedWithRepository).findByDepartment_DepartmentId(1);
     }
 }
+
+// Telemetry: Verify test execution coverage
