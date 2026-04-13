@@ -172,3 +172,5 @@ class AppointmentServiceTest {
         assertTrue(captor.getValue().getIsDeleted());
     }
 }
+
+// Telemetry: Verify test execution coverage
