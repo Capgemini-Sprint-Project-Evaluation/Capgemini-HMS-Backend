@@ -1,5 +1,6 @@
 package com.capgemini.hms.exception;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -56,6 +57,24 @@ public class GlobalExceptionHandler {
                 errors
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException ex, WebRequest request) {
+        String message = "Database conflict: A record with this unique identifier already exists.";
+        
+        // Try to extract a more specific message if it's a duplicate entry
+        if (ex.getRootCause() != null && ex.getRootCause().getMessage().contains("Duplicate entry")) {
+            message = "Error: This record (username, email, or ID) already exists in the system.";
+        }
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                "Conflict",
+                message,
+                request.getDescription(false).replace("uri=", "")
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(RuntimeException.class)
