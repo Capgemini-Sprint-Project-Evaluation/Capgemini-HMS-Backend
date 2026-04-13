@@ -1,10 +1,9 @@
-package com.capgemini.hms.department.controller;
+package com.capgemini.hms.department.controller.api;
 
 import com.capgemini.hms.department.dto.DepartmentDTO;
 import com.capgemini.hms.department.entity.Department;
 import com.capgemini.hms.department.service.DepartmentService;
 import com.capgemini.hms.physician.dto.AffiliationRequest;
-import com.capgemini.hms.physician.entity.AffiliatedWith;
 import com.capgemini.hms.physician.entity.Physician;
 import com.capgemini.hms.physician.repository.PhysicianRepository;
 import jakarta.validation.Valid;
