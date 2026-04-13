@@ -9,19 +9,9 @@ import jakarta.persistence.JoinColumns;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Table(name = "on_call")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class OnCall {
 
     @EmbeddedId
@@ -39,4 +29,37 @@ public class OnCall {
         @JoinColumn(name = "blockcode", referencedColumnName = "blockcode")
     })
     private Block block;
+
+    public OnCall() {
+    }
+
+    public OnCall(OnCallId id, Nurse nurse, Block block) {
+        this.id = id;
+        this.nurse = nurse;
+        this.block = block;
+    }
+
+    public OnCallId getId() {
+        return id;
+    }
+
+    public void setId(OnCallId id) {
+        this.id = id;
+    }
+
+    public Nurse getNurse() {
+        return nurse;
+    }
+
+    public void setNurse(Nurse nurse) {
+        this.nurse = nurse;
+    }
+
+    public Block getBlock() {
+        return block;
+    }
+
+    public void setBlock(Block block) {
+        this.block = block;
+    }
 }

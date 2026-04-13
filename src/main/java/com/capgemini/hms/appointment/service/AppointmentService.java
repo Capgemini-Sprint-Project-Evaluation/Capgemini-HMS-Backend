@@ -2,14 +2,17 @@ package com.capgemini.hms.appointment.service;
 
 import com.capgemini.hms.appointment.entity.Appointment;
 import com.capgemini.hms.appointment.repository.AppointmentRepository;
+import com.capgemini.hms.nurse.entity.Nurse;
 import com.capgemini.hms.nurse.repository.NurseRepository;
+import com.capgemini.hms.patient.entity.Patient;
 import com.capgemini.hms.patient.repository.PatientRepository;
+import com.capgemini.hms.physician.entity.Physician;
 import com.capgemini.hms.physician.repository.PhysicianRepository;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.Optional;
 
@@ -56,19 +59,23 @@ public class AppointmentService {
     }
 
     @Transactional
-    public Appointment updateAppointment(Appointment appointment) {
-        Appointment existing = appointmentRepository.findById(appointment.getAppointmentId())
+    public Appointment updateAppointment(Appointment partial) {
+        Appointment existing = appointmentRepository.findById(partial.getAppointmentId())
                 .filter(a -> !a.getIsDeleted())
                 .orElseThrow(() -> new RuntimeException("Appointment not found"));
         
-        validateAppointment(appointment);
-        
-        existing.setStart(appointment.getStart());
-        existing.setEnd(appointment.getEnd());
-        existing.setExaminationRoom(appointment.getExaminationRoom());
-        existing.setPhysician(appointment.getPhysician());
-        existing.setPrepNurse(appointment.getPrepNurse());
-        existing.setPatient(appointment.getPatient());
+        // Merge only non-null fields
+        if (partial.getPatient() != null) existing.setPatient(partial.getPatient());
+        if (partial.getPhysician() != null) existing.setPhysician(partial.getPhysician());
+        if (partial.getPrepNurse() != null) existing.setPrepNurse(partial.getPrepNurse());
+        if (partial.getStart() != null) existing.setStart(partial.getStart());
+        if (partial.getEnd() != null) existing.setEnd(partial.getEnd());
+        if (partial.getExaminationRoom() != null && !partial.getExaminationRoom().isBlank()) {
+            existing.setExaminationRoom(partial.getExaminationRoom());
+        }
+
+        // Validate the FINAL resultant object
+        validateAppointment(existing);
         
         return appointmentRepository.save(existing);
     }

@@ -58,4 +58,20 @@ public class RoomService {
     public List<Room> getAvailableRooms() {
         return roomRepository.findAvailableRooms();
     }
+
+    public List<Room> getUnavailableRooms() {
+        return roomRepository.findByUnavailableActive(true);
+    }
+
+    public List<Room> getRoomsByType(String roomType) {
+        return roomRepository.findByRoomTypeActive(roomType);
+    }
+
+    public List<Room> getAvailableRoomsByType(String roomType) {
+        return roomRepository.findAvailableByRoomTypeActive(roomType);
+    }
+
+    public List<Room> getUnavailableRoomsByType(String roomType) {
+        return roomRepository.findUnavailableByRoomTypeActive(roomType);
+    }
 }

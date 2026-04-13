@@ -3,25 +3,27 @@ package com.capgemini.hms.appointment.controller;
 import com.capgemini.hms.appointment.dto.AppointmentDTO;
 import com.capgemini.hms.appointment.entity.Appointment;
 import com.capgemini.hms.appointment.service.AppointmentService;
-import com.capgemini.hms.common.dto.ApiResponse;
-import com.capgemini.hms.common.dto.PagedResponse;
 import com.capgemini.hms.nurse.repository.NurseRepository;
 import com.capgemini.hms.patient.repository.PatientRepository;
 import com.capgemini.hms.physician.repository.PhysicianRepository;
-import com.capgemini.hms.security.services.UserDetailsImpl;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import com.capgemini.hms.security.services.UserDetailsImpl;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import com.capgemini.hms.common.dto.ApiResponse;
+import com.capgemini.hms.common.dto.PagedResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @RestController
 @RequestMapping("/api/v1/appointments")
@@ -44,7 +46,6 @@ public class AppointmentController {
     }
 
     @GetMapping("/my")
-    @PreAuthorize("hasRole('PATIENT')")
     @Operation(summary = "Get my appointments", description = "Returns all appointments scheduled for the current logged-in patient")
     public ResponseEntity<ApiResponse<List<AppointmentDTO>>> getMyAppointments() {
         Integer ssn = getAuthenticatedPatientSsn();
@@ -55,7 +56,6 @@ public class AppointmentController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'NURSE')")
     @Operation(summary = "Get all appointments", description = "Returns a paginated master list of all active appointments")
     public ResponseEntity<ApiResponse<PagedResponse<AppointmentDTO>>> getAllAppointments(Pageable pageable) {
         Page<Appointment> page = appointmentService.getAllAppointments(pageable);
@@ -67,7 +67,6 @@ public class AppointmentController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'NURSE')")
     @Operation(summary = "Get appointment by ID", description = "Returns details of a specific active appointment")
     public ResponseEntity<ApiResponse<AppointmentDTO>> getAppointmentById(@PathVariable Integer id) {
         return appointmentService.getAppointmentById(id)
@@ -76,7 +75,6 @@ public class AppointmentController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'NURSE', 'DOCTOR', 'PATIENT')")
     @Operation(summary = "Book an appointment", description = "Schedules a new meeting. Patients can only book for themselves.")
     public ResponseEntity<ApiResponse<AppointmentDTO>> bookAppointment(@Valid @RequestBody AppointmentDTO dto) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -84,9 +82,9 @@ public class AppointmentController {
             dto.setPatientSsn(getAuthenticatedPatientSsn());
         }
         
-        // Validation: Doctor must exist
-        if (!physicianRepository.existsById(dto.getPhysicianId())) {
-             throw new RuntimeException("Validation Failed: Physician with ID " + dto.getPhysicianId() + " does not exist.");
+        // Manual validation for REQUIRED fields on Creation
+        if (dto.getPatientSsn() == null || dto.getPhysicianId() == null || dto.getStart() == null || dto.getEnd() == null || dto.getExaminationRoom() == null || dto.getExaminationRoom().isBlank()) {
+            throw new RuntimeException("Validation Failed: patientSsn, physicianId, start, end, and examinationRoom are mandatory for new bookings.");
         }
 
         Appointment appointment = convertToEntity(dto);
@@ -95,9 +93,8 @@ public class AppointmentController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'NURSE', 'DOCTOR')")
-    @Operation(summary = "Update appointment", description = "Updates an existing appointment record")
-    public ResponseEntity<ApiResponse<AppointmentDTO>> updateAppointment(@PathVariable Integer id, @Valid @RequestBody AppointmentDTO dto) {
+    @Operation(summary = "Update appointment", description = "Updates an existing appointment record (Supports partial updates)")
+    public ResponseEntity<ApiResponse<AppointmentDTO>> updateAppointment(@PathVariable Integer id, @RequestBody AppointmentDTO dto) {
         dto.setAppointmentId(id);
         Appointment appointment = convertToEntity(dto);
         Appointment updated = appointmentService.updateAppointment(appointment);
@@ -105,7 +102,6 @@ public class AppointmentController {
     }
 
     @GetMapping("/physician/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR')")
     @Operation(summary = "Get physician schedule", description = "Returns all active appointments for a specific doctor")
     public ResponseEntity<ApiResponse<List<AppointmentDTO>>> getPhysicianSchedule(@PathVariable Integer id) {
         List<AppointmentDTO> schedule = appointmentService.getPhysicianSchedule(id).stream()
@@ -115,7 +111,6 @@ public class AppointmentController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'NURSE')")
     @Operation(summary = "Cancel appointment", description = "Performs a soft-delete on an appointment record")
     public ResponseEntity<ApiResponse<String>> cancelAppointment(@PathVariable Integer id) {
         appointmentService.deleteAppointment(id);
@@ -136,15 +131,22 @@ public class AppointmentController {
 
     private Appointment convertToEntity(AppointmentDTO dto) {
         Appointment appointment = new Appointment();
-        appointment.setAppointmentId(dto.getAppointmentId() != null ? dto.getAppointmentId() : (int) (System.currentTimeMillis() & 0xfffffff));
-        appointment.setPatient(patientRepository.findById(dto.getPatientSsn())
-                .orElseThrow(() -> new RuntimeException("Patient not found")));
-        appointment.setPhysician(physicianRepository.findById(dto.getPhysicianId())
-                .orElseThrow(() -> new RuntimeException("Physician not found")));
+        appointment.setAppointmentId(dto.getAppointmentId() != null ? dto.getAppointmentId() : null);
+        
+        // Only fetch and set if provided (important for partial updates)
+        if (dto.getPatientSsn() != null) {
+            appointment.setPatient(patientRepository.findById(dto.getPatientSsn())
+                    .orElseThrow(() -> new RuntimeException("Patient not found: " + dto.getPatientSsn())));
+        }
+        
+        if (dto.getPhysicianId() != null) {
+            appointment.setPhysician(physicianRepository.findById(dto.getPhysicianId())
+                    .orElseThrow(() -> new RuntimeException("Physician not found: " + dto.getPhysicianId())));
+        }
         
         if (dto.getPrepNurseId() != null) {
             appointment.setPrepNurse(nurseRepository.findById(dto.getPrepNurseId())
-                    .orElseThrow(() -> new RuntimeException("Nurse not found")));
+                    .orElseThrow(() -> new RuntimeException("Nurse not found: " + dto.getPrepNurseId())));
         }
         
         appointment.setStart(dto.getStart());

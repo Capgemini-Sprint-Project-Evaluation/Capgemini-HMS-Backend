@@ -1,11 +1,12 @@
--- Capgemini HMS Database Schema for Supabase (PostgreSQL)
+-- Capgemini HMS Database Schema (Modernized v1)
 
 -- 1. Independent Core Tables
 CREATE TABLE physician (
     employeeid INTEGER PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     position VARCHAR(255) NOT NULL,
-    ssn INTEGER NOT NULL
+    ssn INTEGER NOT NULL,
+    is_deleted BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE nurse (
@@ -13,20 +14,23 @@ CREATE TABLE nurse (
     name VARCHAR(255) NOT NULL,
     position VARCHAR(255) NOT NULL,
     registered BOOLEAN NOT NULL,
-    ssn INTEGER NOT NULL
+    ssn INTEGER NOT NULL,
+    is_deleted BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE procedures (
     code INTEGER PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    cost DECIMAL(10, 2) NOT NULL
+    cost DECIMAL(10, 2) NOT NULL,
+    is_deleted BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE medication (
     code INTEGER PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     brand VARCHAR(255) NOT NULL,
-    description TEXT NOT NULL
+    description TEXT NOT NULL,
+    is_deleted BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE block (
@@ -39,7 +43,8 @@ CREATE TABLE block (
 CREATE TABLE department (
     departmentid INTEGER PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    head INTEGER REFERENCES physician(employeeid)
+    head INTEGER REFERENCES physician(employeeid),
+    is_deleted BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE patient (
@@ -47,8 +52,9 @@ CREATE TABLE patient (
     name VARCHAR(255) NOT NULL,
     address TEXT NOT NULL,
     phone VARCHAR(20) NOT NULL,
-    insuranceid INTEGER NOT NULL,
-    pcp INTEGER REFERENCES physician(employeeid)
+    insuranceid VARCHAR(50) NOT NULL,
+    pcp INTEGER REFERENCES physician(employeeid),
+    is_deleted BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE room (
@@ -57,6 +63,7 @@ CREATE TABLE room (
     blockfloor INTEGER NOT NULL,
     blockcode INTEGER NOT NULL,
     unavailable BOOLEAN NOT NULL,
+    is_deleted BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (blockfloor, blockcode) REFERENCES block(blockfloor, blockcode)
 );
 
@@ -83,7 +90,8 @@ CREATE TABLE appointment (
     physician INTEGER REFERENCES physician(employeeid),
     start TIMESTAMP NOT NULL,
     "end" TIMESTAMP NOT NULL,
-    examinationroom TEXT NOT NULL
+    examinationroom TEXT NOT NULL,
+    is_deleted BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE stay (
@@ -91,7 +99,9 @@ CREATE TABLE stay (
     patient INTEGER REFERENCES patient(ssn),
     room INTEGER REFERENCES room(roomnumber),
     staystart TIMESTAMP NOT NULL,
-    stayend TIMESTAMP NOT NULL
+    stayend TIMESTAMP NOT NULL,
+    notes TEXT,
+    is_deleted BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE on_call (
@@ -122,5 +132,25 @@ CREATE TABLE undergoes (
     dateundergoes TIMESTAMP NOT NULL,
     physician INTEGER REFERENCES physician(employeeid),
     assistingnurse INTEGER REFERENCES nurse(employeeid),
+    notes TEXT,
     PRIMARY KEY (patient, procedure, stay, dateundergoes)
+);
+
+-- 5. Authentication and User Management
+CREATE TABLE roles (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(20) UNIQUE NOT NULL
+);
+
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(20) UNIQUE NOT NULL,
+    email VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(120) NOT NULL
+);
+
+CREATE TABLE user_roles (
+    user_id INTEGER REFERENCES users(id),
+    role_id INTEGER REFERENCES roles(id),
+    PRIMARY KEY (user_id, role_id)
 );

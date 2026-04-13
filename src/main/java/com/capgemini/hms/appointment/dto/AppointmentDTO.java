@@ -3,33 +3,27 @@ package com.capgemini.hms.appointment.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-
 import java.time.LocalDateTime;
 
 public class AppointmentDTO {
     @Schema(example = "1", description = "Unique ID of the appointment")
     private Integer appointmentId;
 
-    @NotNull
     @Schema(example = "100000001", description = "SSN of the patient")
     private Integer patientSsn;
 
     @Schema(example = "501", description = "Employee ID of the nurse preparing the appointment (optional)")
     private Integer prepNurseId; // Optional
 
-    @NotNull
     @Schema(example = "101", description = "Employee ID of the physician")
     private Integer physicianId;
 
-    @NotNull
     @Schema(example = "2026-04-10T14:30:00", description = "Start time of the appointment")
     private LocalDateTime start;
 
-    @NotNull
     @Schema(example = "2026-04-10T15:00:00", description = "End time of the appointment")
     private LocalDateTime end;
 
-    @NotBlank
     @Schema(example = "Room A-102", description = "Physical location or room for the examination")
     private String examinationRoom;
 

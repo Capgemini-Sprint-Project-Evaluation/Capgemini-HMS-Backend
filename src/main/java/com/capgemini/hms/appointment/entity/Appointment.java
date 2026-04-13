@@ -3,7 +3,12 @@ package com.capgemini.hms.appointment.entity;
 import com.capgemini.hms.nurse.entity.Nurse;
 import com.capgemini.hms.patient.entity.Patient;
 import com.capgemini.hms.physician.entity.Physician;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 import java.time.LocalDateTime;
 
@@ -12,6 +17,7 @@ import java.time.LocalDateTime;
 public class Appointment {
 
     @Id
+    @jakarta.persistence.GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
     @Column(name = "appointmentid")
     private Integer appointmentId;
 
@@ -27,7 +33,13 @@ public class Appointment {
     @JoinColumn(name = "physician", referencedColumnName = "employeeid")
     private Physician physician;
 
-    @Column(name = "end_time")
+    @Column(name = "end", nullable = false)
+    private LocalDateTime end;
+
+    @Column(name = "start", nullable = false)
+    private LocalDateTime start;
+
+    @Column(name = "`end`", nullable = false)
     private LocalDateTime end;
 
     @Column(name = "start_time")
