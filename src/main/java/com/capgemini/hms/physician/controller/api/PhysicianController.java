@@ -1,4 +1,4 @@
-package com.capgemini.hms.physician.controller;
+package com.capgemini.hms.physician.controller.api;
 
 import com.capgemini.hms.common.service.StaffService;
 import com.capgemini.hms.physician.dto.PhysicianDTO;

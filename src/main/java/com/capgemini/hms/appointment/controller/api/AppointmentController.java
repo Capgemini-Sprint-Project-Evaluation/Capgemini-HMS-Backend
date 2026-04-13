@@ -1,4 +1,4 @@
-package com.capgemini.hms.appointment.controller;
+package com.capgemini.hms.appointment.controller.api;
 
 import com.capgemini.hms.appointment.dto.AppointmentDTO;
 import com.capgemini.hms.appointment.entity.Appointment;
@@ -7,7 +7,6 @@ import com.capgemini.hms.nurse.repository.NurseRepository;
 import com.capgemini.hms.patient.repository.PatientRepository;
 import com.capgemini.hms.physician.repository.PhysicianRepository;
 import jakarta.validation.Valid;
-import org.springframework.http.ResponseEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
