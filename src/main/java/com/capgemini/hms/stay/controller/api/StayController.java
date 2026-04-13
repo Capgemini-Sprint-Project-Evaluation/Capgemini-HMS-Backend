@@ -1,4 +1,4 @@
-package com.capgemini.hms.stay.controller;
+package com.capgemini.hms.stay.controller.api;
 
 import com.capgemini.hms.common.dto.ApiResponse;
 import com.capgemini.hms.common.dto.PagedResponse;
@@ -12,7 +12,6 @@ import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
