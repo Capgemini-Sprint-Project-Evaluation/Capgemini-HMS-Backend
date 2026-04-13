@@ -97,3 +97,5 @@ class MedicationServiceTest {
         assertTrue(captor.getValue().getIsDeleted());
     }
 }
+
+// Telemetry: Verify test execution coverage
