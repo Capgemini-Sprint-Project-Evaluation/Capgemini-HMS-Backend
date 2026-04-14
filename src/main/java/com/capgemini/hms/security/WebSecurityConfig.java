@@ -95,6 +95,7 @@ public class WebSecurityConfig {
                                 "/procedure/**",
                                 "/shift/**",
                                 "/blocks/**",
+                                "/block/**",
                                 "/ui/**",
                                 "/css/**",
                                 "/js/**",
