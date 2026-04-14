@@ -10,7 +10,7 @@
             <h2 class="text-3xl font-extrabold tracking-tight text-on-surface font-headline">Physicians</h2>
             <p class="text-on-surface-variant mt-1">Manage physician profiles and assignments.</p>
         </div>
-        <button onclick="openModal()" class="inline-flex items-center gap-2 px-5 py-3 bg-primary text-white font-semibold rounded-xl hover:bg-sky-700 transition-all active:scale-95 shadow-lg shadow-primary/20 text-sm">
+        <button onclick="openModal()" data-admin-only class="inline-flex items-center gap-2 px-5 py-3 bg-primary text-white font-semibold rounded-xl hover:bg-sky-700 transition-all active:scale-95 shadow-lg shadow-primary/20 text-sm">
             <span class="material-symbols-outlined">person_add</span> Add Physician
         </button>
     </div>
@@ -46,10 +46,7 @@
         </div>
         <div class="px-6 py-4 flex justify-between items-center border-t border-surface-container-low text-sm text-on-surface-variant">
             <span id="page-info">—</span>
-            <div class="flex gap-2">
-                <button id="prev-btn" onclick="changePage(-1)" class="px-3 py-1.5 bg-surface-container rounded-lg hover:bg-surface-container-high transition-colors">← Prev</button>
-                <button id="next-btn" onclick="changePage(1)"  class="px-3 py-1.5 bg-surface-container rounded-lg hover:bg-surface-container-high transition-colors">Next →</button>
-            </div>
+            <div id="pager"></div>
         </div>
     </div>
 
@@ -90,126 +87,152 @@
             </div>
         </div>
     </div>
+
+    <style>
+    .field-input { display:block; width:100%; padding:0.6rem 0.875rem; background:#f3f4f5; border:none; border-radius:0.75rem; font-size:0.875rem; outline:none; }
+    .field-input:focus { background:#fff; box-shadow:0 0 0 2px rgba(0,99,151,0.15); }
+    </style>
+
+    <script>
+    let currentPage = 0;
+    let currentList = [];
+    let editMode = false;
+
+    async function loadPhysicians(page) {
+        currentPage = page;
+        const tbody = document.getElementById('physician-tbody');
+        tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-outline text-sm">Loading…</td></tr>';
+        
+        try {
+            const res = await apiFetch('/api/v1/physicians?page=' + page + '&size=10&sort=employeeId,asc');
+            if (!res || !res.data) return;
+            
+            const data = res.data;
+            currentList = data.content || [];
+            
+            document.getElementById('page-info').textContent = 'Page ' + (data.pageNo + 1) + ' of ' + data.totalPages + ' (' + data.totalElements + ' records)';
+            buildPaginationControls('pager', data.totalPages, data.pageNo, 'loadPhysicians');
+            
+            if (currentList.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-outline text-sm">No physicians found.</td></tr>'; 
+            } else {
+                tbody.innerHTML = currentList.map(p =>
+                    '<tr class="hover:bg-primary-fixed/20 transition-colors">' +
+                        '<td class="px-6 py-4 text-sm font-medium text-primary">' + p.employeeId + '</td>' +
+                        '<td class="px-6 py-4">' +
+                            '<div class="flex items-center gap-2">' +
+                                '<div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary flex-shrink-0">' + (p.name || '??').split(' ').map(x=>x[0]).join('').toUpperCase() + '</div>' +
+                                '<span class="font-semibold text-on-surface text-sm">' + p.name + '</span>' +
+                            '</div>' +
+                        '</td>' +
+                        '<td class="px-6 py-4 text-sm text-on-surface-variant">' + p.position + '</td>' +
+                        '<td class="px-6 py-4 text-sm text-on-surface-variant">' + p.ssn + '</td>' +
+                        '<td class="px-6 py-4">' +
+                            '<div class="flex gap-2">' +
+                                '<button onclick="openEditById(' + p.employeeId + ')" data-admin-only class="p-1.5 hover:bg-primary-fixed/30 rounded-lg text-primary"><span class="material-symbols-outlined text-lg">edit</span></button>' +
+                                '<button onclick="deletePhysician(' + p.employeeId + ')" data-admin-only class="p-1.5 hover:bg-error-container rounded-lg text-error"><span class="material-symbols-outlined text-lg">delete</span></button>' +
+                            '</div>' +
+                        '</td>' +
+                    '</tr>').join('');
+            }
+            applyRoleVisibility();
+        } catch(e) { 
+            console.error(e);
+            tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-error text-sm">Failed to load: ' + e.message + '</td></tr>'; 
+        }
+    }
+
+    async function doSearch() {
+        const q = document.getElementById('search-input').value.trim();
+        if (!q) { loadPhysicians(0); return; }
+        const tbody = document.getElementById('physician-tbody');
+        tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-outline text-sm">Searching…</td></tr>';
+        try {
+            const res = await apiFetch('/api/v1/physicians/search?query=' + encodeURIComponent(q) + '&page=0&size=20');
+            if (!res || !res.data) return;
+            currentList = res.data.content || [];
+            document.getElementById('page-info').textContent = res.data.totalElements + ' result(s)';
+            if (currentList.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-outline text-sm">No matches.</td></tr>';
+            } else {
+                tbody.innerHTML = currentList.map(p =>
+                    '<tr class="hover:bg-primary-fixed/20 transition-colors">' +
+                        '<td class="px-6 py-4 text-sm font-medium text-primary">' + p.employeeId + '</td>' +
+                        '<td class="px-6 py-4 font-semibold text-on-surface text-sm">' + p.name + '</td>' +
+                        '<td class="px-6 py-4 text-sm text-on-surface-variant">' + p.position + '</td>' +
+                        '<td class="px-6 py-4 text-sm text-on-surface-variant">' + p.ssn + '</td>' +
+                        '<td class="px-6 py-4">' +
+                            '<div class="flex gap-2">' +
+                                '<button onclick="openEditById(' + p.employeeId + ')" data-admin-only class="p-1.5 hover:bg-primary-fixed/30 rounded-lg text-primary"><span class="material-symbols-outlined text-lg">edit</span></button>' +
+                                '<button onclick="deletePhysician(' + p.employeeId + ')" data-admin-only class="p-1.5 hover:bg-error-container rounded-lg text-error"><span class="material-symbols-outlined text-lg">delete</span></button>' +
+                            '</div>' +
+                        '</td>' +
+                    '</tr>').join('');
+            }
+            applyRoleVisibility();
+        } catch(e) { console.error(e); }
+    }
+
+    function openEditById(id) {
+        const p = currentList.find(x => x.employeeId === id);
+        if (!p) return;
+        editMode = true;
+        document.getElementById('modal-title').textContent = 'Edit Physician';
+        document.getElementById('save-btn').textContent = 'Update';
+        document.getElementById('f-id').value = p.employeeId; 
+        document.getElementById('f-id').disabled = true;
+        document.getElementById('f-id-hidden').value = p.employeeId;
+        document.getElementById('f-ssn').value = p.ssn;
+        document.getElementById('f-name').value = p.name;
+        document.getElementById('f-position').value = p.position;
+        document.getElementById('modal-err').classList.add('hidden');
+        document.getElementById('modal').classList.replace('hidden','flex');
+    }
+
+    function openModal() {
+        editMode = false;
+        document.getElementById('modal-title').textContent = 'Add Physician';
+        document.getElementById('save-btn').textContent = 'Save Physician';
+        ['f-id','f-ssn','f-name','f-position'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('f-id').disabled = false;
+        document.getElementById('modal-err').classList.add('hidden');
+        document.getElementById('modal').classList.replace('hidden','flex');
+    }
+
+    function closeModal() { document.getElementById('modal').classList.replace('flex','hidden'); }
+
+    async function savePhysician() {
+        const errEl = document.getElementById('modal-err'); 
+        errEl.classList.add('hidden');
+        const id = editMode ? parseInt(document.getElementById('f-id-hidden').value) : parseInt(document.getElementById('f-id').value);
+        const payload = { employeeId: id, name: document.getElementById('f-name').value.trim(), position: document.getElementById('f-position').value.trim(), ssn: parseInt(document.getElementById('f-ssn').value) };
+        if (!payload.employeeId || !payload.name || !payload.position || !payload.ssn) { 
+            errEl.textContent = 'All fields are required.'; errEl.classList.remove('hidden'); return; 
+        }
+        const btn = document.getElementById('save-btn'); 
+        btn.disabled = true;
+        try {
+            const res = await apiFetch(editMode ? '/api/v1/physicians/' + id : '/api/v1/physicians', { method: editMode ? 'PUT' : 'POST', body: JSON.stringify(payload) });
+            if (res && res.success) {
+                showToast(editMode ? 'Physician updated!' : 'Physician added!');
+                closeModal(); loadPhysicians(currentPage);
+            } else if (res) {
+                errEl.textContent = res.message || 'Error saving physician.';
+                errEl.classList.remove('hidden');
+            }
+        } catch(e) { errEl.textContent = e.message; errEl.classList.remove('hidden'); }
+        finally { btn.disabled = false; }
+    }
+
+    async function deletePhysician(id) {
+        confirmAction('Delete physician ID ' + id + '?', async () => {
+            const res = await apiFetch('/api/v1/physicians/' + id, { method: 'DELETE' });
+            if (res && res.success) { showToast('Physician deleted.'); loadPhysicians(currentPage); }
+        });
+    }
+
+    // Init
+    loadPhysicians(0);
+    document.getElementById('search-input').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+    </script>
 </section>
-
-<style>
-.field-input { display:block; width:100%; padding:0.6rem 0.875rem; background:#f3f4f5; border:none; border-radius:0.75rem; font-size:0.875rem; outline:none; }
-.field-input:focus { background:#fff; box-shadow:0 0 0 2px rgba(0,99,151,0.15); }
-</style>
-
-<script>
-let currentPage = 0, editMode = false;
-
-async function loadPhysicians(page) {
-    currentPage = page;
-    const tbody = document.getElementById('physician-tbody');
-    tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-outline text-sm">Loading…</td></tr>';
-    try {
-        const res = await apiFetch(`/api/v1/physicians?page=${page}&size=10&sort=employeeId,asc`);
-        if (!res || !res.ok) return;
-        const data = (await res.json()).data;
-        totalPages = data.totalPages;
-        document.getElementById('page-info').textContent = `Page ${data.pageNo + 1} of ${data.totalPages} (${data.totalElements} total)`;
-        document.getElementById('prev-btn').disabled = data.pageNo === 0;
-        document.getElementById('next-btn').disabled = data.last;
-        if (!data.content.length) { tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-outline text-sm">No physicians found.</td></tr>'; return; }
-        tbody.innerHTML = data.content.map(p => `
-            <tr class="hover:bg-primary-fixed/20 transition-colors">
-                <td class="px-6 py-4 text-sm font-medium text-primary">${p.employeeId}</td>
-                <td class="px-6 py-4">
-                    <div class="flex items-center gap-2">
-                        <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary flex-shrink-0">${initials(p.name)}</div>
-                        <span class="font-semibold text-on-surface text-sm">${p.name}</span>
-                    </div>
-                </td>
-                <td class="px-6 py-4 text-sm text-on-surface-variant">${p.position}</td>
-                <td class="px-6 py-4 text-sm text-on-surface-variant">${p.ssn}</td>
-                <td class="px-6 py-4">
-                    <div class="flex gap-2">
-                        <button onclick='openEdit(${JSON.stringify(p)})' class="p-1.5 hover:bg-primary-fixed/30 rounded-lg text-primary"><span class="material-symbols-outlined text-lg">edit</span></button>
-                        <button onclick="deletePhysician(${p.employeeId})" class="p-1.5 hover:bg-error-container rounded-lg text-error"><span class="material-symbols-outlined text-lg">delete</span></button>
-                    </div>
-                </td>
-            </tr>`).join('');
-    } catch(e) {}
-}
-
-async function doSearch() {
-    const q = document.getElementById('search-input').value.trim();
-    if (!q) { loadPhysicians(0); return; }
-    const tbody = document.getElementById('physician-tbody');
-    const res = await apiFetch(`/api/v1/physicians/search?query=${encodeURIComponent(q)}&page=0&size=20`);
-    if (!res || !res.ok) return;
-    const data = (await res.json()).data;
-    document.getElementById('page-info').textContent = `${data.totalElements} result(s)`;
-    tbody.innerHTML = data.content.map(p => `
-        <tr class="hover:bg-primary-fixed/20 transition-colors">
-            <td class="px-6 py-4 text-sm font-medium text-primary">${p.employeeId}</td>
-            <td class="px-6 py-4 font-semibold text-on-surface text-sm">${p.name}</td>
-            <td class="px-6 py-4 text-sm text-on-surface-variant">${p.position}</td>
-            <td class="px-6 py-4 text-sm text-on-surface-variant">${p.ssn}</td>
-            <td class="px-6 py-4">
-                <button onclick='openEdit(${JSON.stringify(p)})' class="p-1.5 hover:bg-primary-fixed/30 rounded-lg text-primary"><span class="material-symbols-outlined text-lg">edit</span></button>
-                <button onclick="deletePhysician(${p.employeeId})" class="p-1.5 hover:bg-error-container rounded-lg text-error"><span class="material-symbols-outlined text-lg">delete</span></button>
-            </td>
-        </tr>`).join('') || '<tr><td colspan="5" class="px-6 py-8 text-center text-outline text-sm">No matches.</td></tr>';
-}
-
-function changePage(d) { loadPhysicians(currentPage + d); }
-function initials(n) { return (n||'??').split(' ').map(x=>x[0]).slice(0,2).join('').toUpperCase(); }
-
-function openModal() {
-    editMode = false;
-    document.getElementById('modal-title').textContent = 'Add Physician';
-    document.getElementById('save-btn').textContent = 'Save Physician';
-    ['f-id','f-ssn','f-name','f-position'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('f-id').disabled = false;
-    document.getElementById('modal-err').classList.add('hidden');
-    document.getElementById('modal').classList.replace('hidden','flex');
-}
-
-function openEdit(p) {
-    editMode = true;
-    document.getElementById('modal-title').textContent = 'Edit Physician';
-    document.getElementById('save-btn').textContent = 'Update';
-    document.getElementById('f-id').value = p.employeeId; document.getElementById('f-id').disabled = true;
-    document.getElementById('f-id-hidden').value = p.employeeId;
-    document.getElementById('f-ssn').value = p.ssn;
-    document.getElementById('f-name').value = p.name;
-    document.getElementById('f-position').value = p.position;
-    document.getElementById('modal-err').classList.add('hidden');
-    document.getElementById('modal').classList.replace('hidden','flex');
-}
-
-function closeModal() { document.getElementById('modal').classList.replace('flex','hidden'); }
-
-async function savePhysician() {
-    const errEl = document.getElementById('modal-err'); errEl.classList.add('hidden');
-    const id = editMode ? parseInt(document.getElementById('f-id-hidden').value) : parseInt(document.getElementById('f-id').value);
-    const payload = { employeeId: id, name: document.getElementById('f-name').value.trim(), position: document.getElementById('f-position').value.trim(), ssn: parseInt(document.getElementById('f-ssn').value) };
-    if (!payload.employeeId || !payload.name || !payload.position || !payload.ssn) { errEl.textContent = 'All fields are required.'; errEl.classList.remove('hidden'); return; }
-    const btn = document.getElementById('save-btn'); btn.disabled = true;
-    try {
-        const res = await apiFetch(editMode ? `/api/v1/physicians/${id}` : '/api/v1/physicians', { method: editMode ? 'PUT' : 'POST', body: JSON.stringify(payload) });
-        if (!res) return;
-        const body = await res.json();
-        if (!res.ok) { errEl.textContent = body.message || 'Error.'; errEl.classList.remove('hidden'); return; }
-        showToast(editMode ? 'Physician updated!' : 'Physician added!');
-        closeModal(); loadPhysicians(currentPage);
-    } catch(e) { errEl.textContent = e.message; errEl.classList.remove('hidden'); }
-    finally { btn.disabled = false; }
-}
-
-async function deletePhysician(id) {
-    confirmAction(`Delete physician ID ${id}?`, async () => {
-        const res = await apiFetch(`/api/v1/physicians/${id}`, { method: 'DELETE' });
-        if (res && res.ok) { showToast('Physician deleted.'); loadPhysicians(currentPage); }
-        else showToast('Failed to delete.', 'error');
-    });
-}
-
-loadPhysicians(0);
-document.getElementById('search-input').addEventListener('keydown', e => { if (e.key==='Enter') doSearch(); });
-</script>
-</body>
-</html>
