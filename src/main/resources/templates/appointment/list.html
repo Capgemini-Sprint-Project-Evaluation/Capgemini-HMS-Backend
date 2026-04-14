@@ -14,11 +14,12 @@
         </button>
     </div>
 
-    <!-- Physician Schedule Lookup -->
     <div class="flex gap-3 mb-6 bg-surface-container-low rounded-xl p-4 items-center">
         <span class="material-symbols-outlined text-outline">event_available</span>
         <p class="text-sm font-medium text-on-surface-variant">View physician schedule:</p>
-        <input id="schedule-pid" type="number" placeholder="Physician ID" class="px-3 py-2 bg-white border border-outline-variant/30 rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/20 w-36"/>
+        <select id="schedule-pid" class="px-3 py-2 bg-white border border-outline-variant/30 rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/20 w-48">
+            <option value="">— Select Physician —</option>
+        </select>
         <button onclick="loadSchedule()" class="px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-sky-700 transition-colors">View Schedule</button>
         <button onclick="loadAppointments(0)" class="px-4 py-2 bg-surface-container text-on-surface text-sm font-medium rounded-lg hover:bg-surface-container-high">Show All</button>
     </div>
@@ -46,10 +47,7 @@
         </div>
         <div class="px-6 py-4 flex justify-between items-center border-t border-surface-container-low text-sm text-on-surface-variant">
             <span id="page-info">—</span>
-            <div class="flex gap-2">
-                <button id="prev-btn" onclick="changePage(-1)" class="px-3 py-1.5 bg-surface-container rounded-lg hover:bg-surface-container-high">← Prev</button>
-                <button id="next-btn" onclick="changePage(1)"  class="px-3 py-1.5 bg-surface-container rounded-lg hover:bg-surface-container-high">Next →</button>
-            </div>
+            <div id="pager"></div>
         </div>
     </div>
 
@@ -68,8 +66,10 @@
                         <input id="f-patient" type="number" placeholder="100000001" class="field-input mt-1"/>
                     </div>
                     <div>
-                        <label class="text-xs font-semibold text-outline uppercase tracking-wider">Physician ID *</label>
-                        <input id="f-physician" type="number" placeholder="101" class="field-input mt-1"/>
+                        <label class="text-xs font-semibold text-outline uppercase tracking-wider">Physician *</label>
+                        <select id="f-physician" class="field-input mt-1">
+                            <option value="">— Select Physician —</option>
+                        </select>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
@@ -88,8 +88,10 @@
                         <input id="f-room" type="text" placeholder="Room A-102" class="field-input mt-1"/>
                     </div>
                     <div>
-                        <label class="text-xs font-semibold text-outline uppercase tracking-wider">Prep Nurse ID</label>
-                        <input id="f-nurse" type="number" placeholder="501 (optional)" class="field-input mt-1"/>
+                        <label class="text-xs font-semibold text-outline uppercase tracking-wider">Prep Nurse</label>
+                        <select id="f-nurse" class="field-input mt-1">
+                            <option value="">— Select Nurse —</option>
+                        </select>
                     </div>
                 </div>
                 <div id="modal-err" class="hidden text-error text-sm bg-error-container rounded-lg px-3 py-2"></div>
@@ -100,129 +102,145 @@
             </div>
         </div>
     </div>
+
+    <style>
+    .field-input { display:block; width:100%; padding:0.6rem 0.875rem; background:#f3f4f5; border:none; border-radius:0.75rem; font-size:0.875rem; outline:none; }
+    .field-input:focus { background:#fff; box-shadow:0 0 0 2px rgba(0,99,151,0.15); }
+    </style>
+
+    <script>
+    let currentPage = 0;
+    let currentList = [];
+    let editMode = false;
+
+    function fmtDt(dt) { 
+        return dt ? new Date(dt).toLocaleString('en-IN', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—'; 
+    }
+
+    async function loadAppointments(page) {
+        currentPage = page;
+        const tbody = document.getElementById('apt-tbody');
+        tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-8 text-center text-outline text-sm">Loading…</td></tr>';
+        
+        try {
+            const res = await apiFetch('/api/v1/appointments?page=' + page + '&size=10&sort=appointmentId,asc');
+            if (!res || !res.data) return;
+            
+            const data = res.data;
+            currentList = data.content || [];
+            
+            document.getElementById('page-info').textContent = 'Page ' + (data.pageNo + 1) + ' of ' + data.totalPages + ' (' + data.totalElements + ' records)';
+            buildPaginationControls('pager', data.totalPages, data.pageNo, 'loadAppointments');
+            
+            if (currentList.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-8 text-center text-outline text-sm">No appointments found.</td></tr>'; 
+            } else {
+                renderRows(currentList);
+            }
+        } catch(e) { 
+            tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-8 text-center text-error text-sm">Load error: ' + e.message + '</td></tr>'; 
+        }
+    }
+
+    async function loadSchedule() {
+        const pid = document.getElementById('schedule-pid').value;
+        if (!pid) { showToast('Select a physician.', 'warn'); return; }
+        const res = await apiFetch('/api/v1/appointments/physician/' + pid);
+        if (!res || !res.data) return;
+        currentList = res.data;
+        document.getElementById('page-info').textContent = currentList.length + ' appointment(s) for physician ' + pid;
+        if (!currentList.length) { 
+            document.getElementById('apt-tbody').innerHTML = '<tr><td colspan="8" class="px-6 py-8 text-center text-outline text-sm">No appointments for this physician.</td></tr>'; 
+            return; 
+        }
+        renderRows(currentList);
+    }
+
+    function renderRows(apts) {
+        document.getElementById('apt-tbody').innerHTML = apts.map(a => 
+            '<tr class="hover:bg-primary-fixed/20 transition-colors">' +
+                '<td class="px-6 py-4 text-sm font-medium text-primary">#' + a.appointmentId + '</td>' +
+                '<td class="px-6 py-4 text-sm text-on-surface-variant">' + a.patientSsn + '</td>' +
+                '<td class="px-6 py-4 text-sm text-on-surface-variant">' + a.physicianId + ' — ' + (a.physicianName || '') + '</td>' +
+                '<td class="px-6 py-4 text-sm text-on-surface">' + fmtDt(a.start) + '</td>' +
+                '<td class="px-6 py-4 text-sm text-on-surface">' + fmtDt(a.end) + '</td>' +
+                '<td class="px-6 py-4 text-sm text-on-surface-variant">' + (a.examinationRoom || '—') + '</td>' +
+                '<td class="px-6 py-4 text-sm text-on-surface-variant">' + (a.prepNurseId || '—') + '</td>' +
+                '<td class="px-6 py-4">' +
+                    '<div class="flex gap-2">' +
+                        '<button onclick="openEditById(' + a.appointmentId + ')" class="p-1.5 hover:bg-primary-fixed/30 rounded-lg text-primary"><span class="material-symbols-outlined text-lg">edit</span></button>' +
+                        '<button onclick="cancelApt(' + a.appointmentId + ')" class="p-1.5 hover:bg-error-container rounded-lg text-error"><span class="material-symbols-outlined text-lg">cancel</span></button>' +
+                    '</div>' +
+                '</td>' +
+            '</tr>').join('');
+        applyRoleVisibility();
+    }
+
+    function openEditById(id) {
+        const a = currentList.find(x => x.appointmentId === id);
+        if (!a) return;
+        editMode = true;
+        document.getElementById('modal-title').textContent = 'Update Appointment';
+        document.getElementById('save-btn').textContent = 'Update';
+        document.getElementById('f-apt-id').value = a.appointmentId;
+        document.getElementById('f-patient').value = a.patientSsn;
+        document.getElementById('f-physician').value = a.physicianId;
+        document.getElementById('f-start').value = a.start ? new Date(a.start).toISOString().slice(0,16) : '';
+        document.getElementById('f-end').value = a.end ? new Date(a.end).toISOString().slice(0,16) : '';
+        document.getElementById('f-room').value = a.examinationRoom || '';
+        document.getElementById('f-nurse').value = a.prepNurseId || '';
+        document.getElementById('modal-err').classList.add('hidden');
+        document.getElementById('modal').classList.replace('hidden','flex');
+    }
+
+    function openModal() {
+        editMode = false;
+        document.getElementById('modal-title').textContent = 'Book Appointment';
+        document.getElementById('save-btn').textContent = 'Book';
+        ['f-apt-id','f-patient','f-physician','f-start','f-end','f-room','f-nurse'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('modal-err').classList.add('hidden');
+        document.getElementById('modal').classList.replace('hidden','flex');
+    }
+
+    function closeModal() { document.getElementById('modal').classList.replace('flex','hidden'); }
+
+    async function saveAppointment() {
+        const errEl = document.getElementById('modal-err'); errEl.classList.add('hidden');
+        const payload = {
+            patientSsn: parseInt(document.getElementById('f-patient').value),
+            physicianId: parseInt(document.getElementById('f-physician').value),
+            start: document.getElementById('f-start').value || null,
+            end: document.getElementById('f-end').value || null,
+            examinationRoom: document.getElementById('f-room').value.trim() || null,
+            prepNurseId: document.getElementById('f-nurse').value ? parseInt(document.getElementById('f-nurse').value) : null
+        };
+        if (!payload.patientSsn || !payload.physicianId || !payload.start || !payload.end || !payload.examinationRoom) {
+            errEl.textContent = 'Please fill all required fields.'; errEl.classList.remove('hidden'); return;
+        }
+        const btn = document.getElementById('save-btn'); btn.disabled = true;
+        try {
+            const aptId = document.getElementById('f-apt-id').value;
+            const res = await apiFetch(editMode ? '/api/v1/appointments/' + aptId : '/api/v1/appointments', { method: editMode ? 'PUT' : 'POST', body: JSON.stringify(payload) });
+            if (res && res.success) {
+                showToast(editMode ? 'Appointment updated!' : 'Appointment booked!');
+                closeModal(); loadAppointments(currentPage);
+            } else if (res) {
+                errEl.textContent = res.message || 'Error.'; errEl.classList.remove('hidden');
+            }
+        } catch(e) { errEl.textContent = e.message; errEl.classList.remove('hidden'); }
+        finally { btn.disabled = false; }
+    }
+
+    async function cancelApt(id) {
+        confirmAction('Cancel appointment #' + id + '?', async () => {
+            const res = await apiFetch('/api/v1/appointments/' + id, { method: 'DELETE' });
+            if (res && res.success) { showToast('Appointment cancelled.'); loadAppointments(currentPage); }
+        });
+    }
+
+    loadAppointments(0);
+    buildPhysicianDropdown('schedule-pid');
+    buildPhysicianDropdown('f-physician');
+    buildNurseDropdown('f-nurse');
+    </script>
 </section>
-
-<style>
-.field-input { display:block; width:100%; padding:0.6rem 0.875rem; background:#f3f4f5; border:none; border-radius:0.75rem; font-size:0.875rem; outline:none; }
-.field-input:focus { background:#fff; box-shadow:0 0 0 2px rgba(0,99,151,0.15); }
-</style>
-
-<script>
-let currentPage = 0, editMode = false;
-
-function fmtDt(dt) { return dt ? new Date(dt).toLocaleString('en-IN', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—'; }
-
-async function loadAppointments(page) {
-    currentPage = page;
-    const tbody = document.getElementById('apt-tbody');
-    tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-8 text-center text-outline text-sm">Loading…</td></tr>';
-    const res = await apiFetch(`/api/v1/appointments?page=${page}&size=10&sort=appointmentId,asc`);
-    if (!res || !res.ok) return;
-    const data = (await res.json()).data;
-    document.getElementById('page-info').textContent = `Page ${data.pageNo+1} of ${data.totalPages} (${data.totalElements} total)`;
-    document.getElementById('prev-btn').disabled = data.pageNo === 0;
-    document.getElementById('next-btn').disabled = data.last;
-    if (!data.content.length) { tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-8 text-center text-outline text-sm">No appointments.</td></tr>'; return; }
-    renderRows(data.content);
-}
-
-async function loadSchedule() {
-    const pid = document.getElementById('schedule-pid').value;
-    if (!pid) { showToast('Enter a physician ID.', 'warn'); return; }
-    const res = await apiFetch(`/api/v1/appointments/physician/${pid}`);
-    if (!res || !res.ok) { showToast('Physician not found.', 'error'); return; }
-    const apts = (await res.json()).data;
-    document.getElementById('page-info').textContent = `${apts.length} appointment(s) for physician ${pid}`;
-    if (!apts.length) { document.getElementById('apt-tbody').innerHTML = '<tr><td colspan="8" class="px-6 py-8 text-center text-outline text-sm">No appointments for this physician.</td></tr>'; return; }
-    renderRows(apts);
-}
-
-function renderRows(apts) {
-    document.getElementById('apt-tbody').innerHTML = apts.map(a => `
-        <tr class="hover:bg-primary-fixed/20 transition-colors">
-            <td class="px-6 py-4 text-sm font-medium text-primary">#${a.appointmentId}</td>
-            <td class="px-6 py-4 text-sm text-on-surface-variant">${a.patientSsn}</td>
-            <td class="px-6 py-4 text-sm text-on-surface-variant">${a.physicianId}</td>
-            <td class="px-6 py-4 text-sm text-on-surface">${fmtDt(a.start)}</td>
-            <td class="px-6 py-4 text-sm text-on-surface">${fmtDt(a.end)}</td>
-            <td class="px-6 py-4 text-sm text-on-surface-variant">${a.examinationRoom || '—'}</td>
-            <td class="px-6 py-4 text-sm text-on-surface-variant">${a.prepNurseId || '—'}</td>
-            <td class="px-6 py-4">
-                <div class="flex gap-2">
-                    <button onclick='openEdit(${JSON.stringify(a)})' class="p-1.5 hover:bg-primary-fixed/30 rounded-lg text-primary"><span class="material-symbols-outlined text-lg">edit</span></button>
-                    <button onclick="cancelApt(${a.appointmentId})" class="p-1.5 hover:bg-error-container rounded-lg text-error"><span class="material-symbols-outlined text-lg">cancel</span></button>
-                </div>
-            </td>
-        </tr>`).join('');
-}
-
-function changePage(d) { loadAppointments(currentPage + d); }
-
-function toLocal(dt) {
-    if (!dt) return '';
-    return new Date(dt).toISOString().slice(0,16);
-}
-
-function openModal() {
-    editMode = false;
-    document.getElementById('modal-title').textContent = 'Book Appointment';
-    document.getElementById('save-btn').textContent = 'Book';
-    ['f-apt-id','f-patient','f-physician','f-start','f-end','f-room','f-nurse'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('modal-err').classList.add('hidden');
-    document.getElementById('modal').classList.replace('hidden','flex');
-}
-
-function openEdit(a) {
-    editMode = true;
-    document.getElementById('modal-title').textContent = 'Update Appointment';
-    document.getElementById('save-btn').textContent = 'Update';
-    document.getElementById('f-apt-id').value = a.appointmentId;
-    document.getElementById('f-patient').value = a.patientSsn;
-    document.getElementById('f-physician').value = a.physicianId;
-    document.getElementById('f-start').value = toLocal(a.start);
-    document.getElementById('f-end').value = toLocal(a.end);
-    document.getElementById('f-room').value = a.examinationRoom || '';
-    document.getElementById('f-nurse').value = a.prepNurseId || '';
-    document.getElementById('modal-err').classList.add('hidden');
-    document.getElementById('modal').classList.replace('hidden','flex');
-}
-
-function closeModal() { document.getElementById('modal').classList.replace('flex','hidden'); }
-
-async function saveAppointment() {
-    const errEl = document.getElementById('modal-err'); errEl.classList.add('hidden');
-    const payload = {
-        patientSsn: parseInt(document.getElementById('f-patient').value),
-        physicianId: parseInt(document.getElementById('f-physician').value),
-        start: document.getElementById('f-start').value || null,
-        end: document.getElementById('f-end').value || null,
-        examinationRoom: document.getElementById('f-room').value.trim() || null,
-        prepNurseId: document.getElementById('f-nurse').value ? parseInt(document.getElementById('f-nurse').value) : null
-    };
-    const btn = document.getElementById('save-btn'); btn.disabled = true;
-    try {
-        const aptId = document.getElementById('f-apt-id').value;
-        const url  = editMode ? `/api/v1/appointments/${aptId}` : '/api/v1/appointments';
-        const meth = editMode ? 'PUT' : 'POST';
-        const res = await apiFetch(url, { method: meth, body: JSON.stringify(payload) });
-        if (!res) return;
-        const body = await res.json();
-        if (!res.ok) { errEl.textContent = body.message || 'Error.'; errEl.classList.remove('hidden'); return; }
-        showToast(editMode ? 'Appointment updated!' : 'Appointment booked!');
-        closeModal(); loadAppointments(currentPage);
-    } catch(e) { errEl.textContent = e.message; errEl.classList.remove('hidden'); }
-    finally { btn.disabled = false; }
-}
-
-async function cancelApt(id) {
-    confirmAction(`Cancel appointment #${id}?`, async () => {
-        const res = await apiFetch(`/api/v1/appointments/${id}`, { method: 'DELETE' });
-        if (res && res.ok) { showToast('Appointment cancelled.'); loadAppointments(currentPage); }
-        else showToast('Failed.', 'error');
-    });
-}
-
-loadAppointments(0);
-</script>
-</body>
-</html>
