@@ -1,5 +1,7 @@
 <!-- templates/fragments/sidebar.html -->
-<aside th:fragment="sidebar" class="fixed left-0 top-0 h-full flex flex-col bg-slate-50 w-64 border-r border-outline-variant/20 z-50 overflow-y-auto no-scrollbar">
+<aside th:fragment="sidebar"
+       class="fixed left-0 top-0 h-full flex flex-col bg-slate-50 w-64 border-r border-outline-variant/20 z-50 overflow-y-auto no-scrollbar">
+
     <div class="p-6 pb-4">
         <div class="flex items-center gap-2">
             <span class="material-symbols-outlined text-primary text-3xl">local_hospital</span>
@@ -11,106 +13,136 @@
     </div>
 
     <nav class="flex-1 px-3 space-y-0.5 pb-4">
+
         <!-- Dashboard -->
-        <a href="/"
-           th:classappend="${#httpServletRequest.requestURI == '/' ? 'bg-sky-50 text-sky-700 font-bold border-r-4 border-sky-600' : 'text-slate-500 hover:bg-sky-50 hover:text-sky-700'}"
+        <a href="/home" data-admin-only
+           th:classappend="${currentPath == '/'
+             ? 'bg-sky-50 text-sky-700 font-bold border-r-4 border-sky-600'
+             : 'text-slate-500 hover:bg-sky-50 hover:text-sky-700'}"
            class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-colors text-sm">
             <span class="material-symbols-outlined text-xl">dashboard</span>Dashboard
         </a>
 
         <!-- Patients -->
         <a href="/patient"
-           th:classappend="${#httpServletRequest.requestURI.startsWith('/patient') ? 'bg-sky-50 text-sky-700 font-bold border-r-4 border-sky-600' : 'text-slate-500 hover:bg-sky-50 hover:text-sky-700'}"
+           th:classappend="${currentPath != null and currentPath.startsWith('/patient')
+             ? 'bg-sky-50 text-sky-700 font-bold border-r-4 border-sky-600'
+             : 'text-slate-500 hover:bg-sky-50 hover:text-sky-700'}"
            class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-colors text-sm">
             <span class="material-symbols-outlined text-xl">group</span>Patients
         </a>
 
         <!-- Physicians -->
         <a href="/physician"
-           th:classappend="${#httpServletRequest.requestURI.startsWith('/physician') ? 'bg-sky-50 text-sky-700 font-bold border-r-4 border-sky-600' : 'text-slate-500 hover:bg-sky-50 hover:text-sky-700'}"
+           th:classappend="${currentPath != null and currentPath.startsWith('/physician')
+             ? 'bg-sky-50 text-sky-700 font-bold border-r-4 border-sky-600'
+             : 'text-slate-500 hover:bg-sky-50 hover:text-sky-700'}"
            class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-colors text-sm">
             <span class="material-symbols-outlined text-xl">stethoscope</span>Physicians
         </a>
 
         <!-- Nurses -->
         <a href="/nurse"
-           th:classappend="${#httpServletRequest.requestURI.startsWith('/nurse') ? 'bg-sky-50 text-sky-700 font-bold border-r-4 border-sky-600' : 'text-slate-500 hover:bg-sky-50 hover:text-sky-700'}"
+           th:classappend="${currentPath != null and currentPath.startsWith('/nurse')
+             ? 'bg-sky-50 text-sky-700 font-bold border-r-4 border-sky-600'
+             : 'text-slate-500 hover:bg-sky-50 hover:text-sky-700'}"
            class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-colors text-sm">
             <span class="material-symbols-outlined text-xl">personal_injury</span>Nurses
         </a>
 
         <!-- Appointments -->
         <a href="/appointment"
-           th:classappend="${#httpServletRequest.requestURI.startsWith('/appointment') ? 'bg-sky-50 text-sky-700 font-bold border-r-4 border-sky-600' : 'text-slate-500 hover:bg-sky-50 hover:text-sky-700'}"
+           th:classappend="${currentPath != null and currentPath.startsWith('/appointment')
+             ? 'bg-sky-50 text-sky-700 font-bold border-r-4 border-sky-600'
+             : 'text-slate-500 hover:bg-sky-50 hover:text-sky-700'}"
            class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-colors text-sm">
             <span class="material-symbols-outlined text-xl">event</span>Appointments
         </a>
 
         <!-- Departments -->
         <a href="/department"
-           th:classappend="${#httpServletRequest.requestURI.startsWith('/department') ? 'bg-sky-50 text-sky-700 font-bold border-r-4 border-sky-600' : 'text-slate-500 hover:bg-sky-50 hover:text-sky-700'}"
+           th:classappend="${currentPath != null and currentPath.startsWith('/department')
+             ? 'bg-sky-50 text-sky-700 font-bold border-r-4 border-sky-600'
+             : 'text-slate-500 hover:bg-sky-50 hover:text-sky-700'}"
            class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-colors text-sm">
             <span class="material-symbols-outlined text-xl">account_tree</span>Departments
         </a>
 
         <!-- Rooms -->
-        <a href="/room"
-           th:classappend="${#httpServletRequest.requestURI.startsWith('/room') ? 'bg-sky-50 text-sky-700 font-bold border-r-4 border-sky-600' : 'text-slate-500 hover:bg-sky-50 hover:text-sky-700'}"
+        <a href="/room" data-admin-only
+           th:classappend="${currentPath != null and currentPath.startsWith('/room')
+             ? 'bg-sky-50 text-sky-700 font-bold border-r-4 border-sky-600'
+             : 'text-slate-500 hover:bg-sky-50 hover:text-sky-700'}"
            class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-colors text-sm">
             <span class="material-symbols-outlined text-xl">bed</span>Rooms
         </a>
 
         <!-- Stays -->
         <a href="/stay"
-           th:classappend="${#httpServletRequest.requestURI.startsWith('/stay') ? 'bg-sky-50 text-sky-700 font-bold border-r-4 border-sky-600' : 'text-slate-500 hover:bg-sky-50 hover:text-sky-700'}"
+           th:classappend="${currentPath != null and currentPath.startsWith('/stay')
+             ? 'bg-sky-50 text-sky-700 font-bold border-r-4 border-sky-600'
+             : 'text-slate-500 hover:bg-sky-50 hover:text-sky-700'}"
            class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-colors text-sm">
             <span class="material-symbols-outlined text-xl">hotel</span>Patient Stays
         </a>
 
         <!-- Medications -->
         <a href="/medication"
-           th:classappend="${#httpServletRequest.requestURI.startsWith('/medication') ? 'bg-sky-50 text-sky-700 font-bold border-r-4 border-sky-600' : 'text-slate-500 hover:bg-sky-50 hover:text-sky-700'}"
+           th:classappend="${currentPath != null and currentPath.startsWith('/medication')
+             ? 'bg-sky-50 text-sky-700 font-bold border-r-4 border-sky-600'
+             : 'text-slate-500 hover:bg-sky-50 hover:text-sky-700'}"
            class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-colors text-sm">
             <span class="material-symbols-outlined text-xl">medication</span>Medications
         </a>
 
         <!-- Prescriptions -->
         <a href="/prescription"
-           th:classappend="${#httpServletRequest.requestURI.startsWith('/prescription') ? 'bg-sky-50 text-sky-700 font-bold border-r-4 border-sky-600' : 'text-slate-500 hover:bg-sky-50 hover:text-sky-700'}"
+           th:classappend="${currentPath != null and currentPath.startsWith('/prescription')
+             ? 'bg-sky-50 text-sky-700 font-bold border-r-4 border-sky-600'
+             : 'text-slate-500 hover:bg-sky-50 hover:text-sky-700'}"
            class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-colors text-sm">
             <span class="material-symbols-outlined text-xl">description</span>Prescriptions
         </a>
 
         <!-- Procedures -->
         <a href="/procedure"
-           th:classappend="${#httpServletRequest.requestURI.startsWith('/procedure') ? 'bg-sky-50 text-sky-700 font-bold border-r-4 border-sky-600' : 'text-slate-500 hover:bg-sky-50 hover:text-sky-700'}"
+           th:classappend="${currentPath != null and currentPath.startsWith('/procedure')
+             ? 'bg-sky-50 text-sky-700 font-bold border-r-4 border-sky-600'
+             : 'text-slate-500 hover:bg-sky-50 hover:text-sky-700'}"
            class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-colors text-sm">
             <span class="material-symbols-outlined text-xl">surgical</span>Procedures
         </a>
 
         <!-- Medical Records -->
         <a href="/medical-records"
-           th:classappend="${#httpServletRequest.requestURI.startsWith('/medical-records') ? 'bg-sky-50 text-sky-700 font-bold border-r-4 border-sky-600' : 'text-slate-500 hover:bg-sky-50 hover:text-sky-700'}"
+           th:classappend="${currentPath != null and currentPath.startsWith('/medical-records')
+             ? 'bg-sky-50 text-sky-700 font-bold border-r-4 border-sky-600'
+             : 'text-slate-500 hover:bg-sky-50 hover:text-sky-700'}"
            class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-colors text-sm">
             <span class="material-symbols-outlined text-xl">folder_shared</span>Medical Records
         </a>
 
-        <!-- On-Call Shifts -->
+        <!-- Shifts -->
         <a href="/shift"
-           th:classappend="${#httpServletRequest.requestURI.startsWith('/shift') ? 'bg-sky-50 text-sky-700 font-bold border-r-4 border-sky-600' : 'text-slate-500 hover:bg-sky-50 hover:text-sky-700'}"
+           th:classappend="${currentPath != null and currentPath.startsWith('/shift')
+             ? 'bg-sky-50 text-sky-700 font-bold border-r-4 border-sky-600'
+             : 'text-slate-500 hover:bg-sky-50 hover:text-sky-700'}"
            class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-colors text-sm">
             <span class="material-symbols-outlined text-xl">schedule</span>On-Call Shifts
         </a>
 
         <!-- Certifications -->
         <a href="/certification"
-           th:classappend="${#httpServletRequest.requestURI.startsWith('/certification') ? 'bg-sky-50 text-sky-700 font-bold border-r-4 border-sky-600' : 'text-slate-500 hover:bg-sky-50 hover:text-sky-700'}"
+           th:classappend="${currentPath != null and currentPath.startsWith('/certification')
+             ? 'bg-sky-50 text-sky-700 font-bold border-r-4 border-sky-600'
+             : 'text-slate-500 hover:bg-sky-50 hover:text-sky-700'}"
            class="flex items-center gap-3 px-4 py-2.5 rounded-xl transition-colors text-sm">
             <span class="material-symbols-outlined text-xl">verified</span>Certifications
         </a>
+
     </nav>
 
-    <!-- User block -->
+    <!-- User block stays SAME -->
     <div class="p-4 border-t border-outline-variant/20">
         <div class="flex items-center gap-3 p-3 bg-white rounded-xl shadow-sm cursor-pointer hover:bg-slate-50 transition-colors" onclick="logout()">
             <div class="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold flex-shrink-0" id="sidebar-avatar">?</div>
@@ -121,17 +153,22 @@
             <span class="material-symbols-outlined text-outline text-lg">logout</span>
         </div>
     </div>
+
     <script>
         (function initSidebar() {
             const u = JSON.parse(localStorage.getItem('hms_user') || '{}');
             const nameEl = document.getElementById('sidebar-username');
             const roleEl = document.getElementById('sidebar-role');
             const avEl   = document.getElementById('sidebar-avatar');
+
             if (u.username) {
                 nameEl.textContent = u.username;
                 avEl.textContent = u.username.substring(0,2).toUpperCase();
             }
-            if (u.roles && u.roles[0]) roleEl.textContent = u.roles[0].replace('ROLE_','');
+
+            if (u.roles && u.roles[0]) {
+                roleEl.textContent = u.roles[0].replace('ROLE_','');
+            }
         })();
     </script>
 </aside>

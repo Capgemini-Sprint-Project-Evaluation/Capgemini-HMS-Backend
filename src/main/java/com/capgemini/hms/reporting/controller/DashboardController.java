@@ -15,7 +15,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
-@RequestMapping("/api/v1/dashboard")
+@RequestMapping("/api/dashboard")
 @Tag(name = "Reporting & Analytics", description = "Endpoints for hospital administrators to view high-level summaries and statistics")
 public class DashboardController {
 

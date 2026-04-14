@@ -81,6 +81,7 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         #toast { transition: opacity 0.4s ease, transform 0.4s ease; }
     </style>
+    <script src="/js/main.js"></script>
 </head>
 <body class="bg-surface text-on-surface font-body">
 
@@ -102,60 +103,21 @@
     </div>
 
     <script>
-        // ─── Auth helpers ───────────────────────────────────────────────
-        function getToken() { return localStorage.getItem('hms_token'); }
-        function getUser()  { try { return JSON.parse(localStorage.getItem('hms_user') || '{}'); } catch { return {}; } }
-        function hasRole(r) { return (getUser().roles || []).includes('ROLE_' + r.toUpperCase()); }
-
-        function authHeaders() {
-            return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() };
-        }
-
-        async function apiFetch(url, opts = {}) {
-            opts.headers = { ...authHeaders(), ...(opts.headers || {}) };
-            const res = await fetch(url, opts);
-            if (res.status === 401) { logout(); return null; }
-            return res;
-        }
-
-        function logout() {
-            localStorage.removeItem('hms_token');
-            localStorage.removeItem('hms_refresh');
-            localStorage.removeItem('hms_user');
-            window.location.href = '/login';
-        }
-
-        // ─── Toast ───────────────────────────────────────────────────────
-        function showToast(msg, type = 'success') {
-            const t = document.getElementById('toast');
-            const inner = document.getElementById('toast-inner');
-            const icon = document.getElementById('toast-icon');
-            document.getElementById('toast-msg').textContent = msg;
-            inner.className = 'flex items-center gap-3 px-5 py-3 rounded-xl shadow-xl text-white text-sm font-semibold ' +
-                (type === 'error' ? 'bg-error' : type === 'warn' ? 'bg-tertiary' : 'bg-on-surface');
-            icon.textContent = type === 'error' ? 'error' : type === 'warn' ? 'warning' : 'check_circle';
-            t.classList.remove('opacity-0','translate-y-4','pointer-events-none');
-            t.classList.add('opacity-100','translate-y-0');
-            setTimeout(() => { t.classList.remove('opacity-100','translate-y-0'); t.classList.add('opacity-0','translate-y-4','pointer-events-none'); }, 3500);
-        }
-
-        // ─── Confirm dialog ─────────────────────────────────────────────
-        function confirmAction(msg, fn) {
-            if (confirm(msg)) fn();
-        }
-
-        // ─── Protect pages that need auth ────────────────────────────────
-        (function() {
-            const pub = ['/login'];
-            if (!pub.includes(window.location.pathname) && !getToken()) {
-                window.location.href = '/login';
-            }
-            // Update sidebar user block
+        // Initialize sidebar/header roles using helpers from main.js
+        (function initHeader() {
             const u = getUser();
-            const nameEl = document.getElementById('sidebar-username');
-            const roleEl = document.getElementById('sidebar-role');
-            if (nameEl && u.username) nameEl.textContent = u.username;
-            if (roleEl && u.roles) roleEl.textContent = (u.roles[0] || '').replace('ROLE_','');
+            const sidebarName = document.getElementById('sidebar-username');
+            const sidebarAvatar = document.getElementById('sidebar-avatar');
+            const headerRoleBadge = document.getElementById('header-role-badge');
+
+            if (u && u.username) {
+                if (sidebarName) sidebarName.textContent = u.username;
+                if (sidebarAvatar) sidebarAvatar.textContent = u.username.substring(0,2).toUpperCase();
+            }
+            const role = getRole();
+            if (role) {
+                if (headerRoleBadge) headerRoleBadge.textContent = role;
+            }
         })();
     </script>
 </body>
