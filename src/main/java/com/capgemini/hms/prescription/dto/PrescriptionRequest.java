@@ -5,6 +5,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
+/**
+ * PrescriptionRequest is a Data Transfer Object (DTO) used for creating or updating prescriptions.
+ * It contains IDs for the physician, patient, and medication, along with the prescription date and dose.
+ */
 public class PrescriptionRequest {
     @NotNull
     @Schema(example = "101", description = "Employee ID of the prescribing physician")
