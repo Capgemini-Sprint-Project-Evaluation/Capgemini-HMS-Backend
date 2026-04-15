@@ -20,6 +20,10 @@ import com.capgemini.hms.common.dto.ApiResponse;
 import com.capgemini.hms.security.services.UserDetailsImpl;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+/**
+ * PrescriptionController provides REST endpoints for managing medication prescriptions.
+ * It allows patients to view their own prescriptions and physicians/admins to create new ones.
+ */
 @RestController
 @RequestMapping("/api/v1/prescriptions")
 @Tag(name = "Medication Prescriptions", description = "Endpoints for physicians to prescribe medications to patients")
