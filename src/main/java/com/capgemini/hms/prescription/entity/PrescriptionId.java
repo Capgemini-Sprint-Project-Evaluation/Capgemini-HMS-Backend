@@ -5,6 +5,10 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+/**
+ * PrescriptionId represents the composite primary key for the Prescription entity.
+ * It includes the physician ID, patient SSN, medication code, and the date of prescription.
+ */
 @Embeddable
 public class PrescriptionId implements Serializable {
     private Integer physician;

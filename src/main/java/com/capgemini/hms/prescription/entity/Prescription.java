@@ -12,6 +12,10 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
 
+/**
+ * Prescription entity represents the association between a Physician, Patient, and Medication.
+ * It maps to the 'prescribes' table in the database and tracks medication doses and appointment links.
+ */
 @Entity
 @Table(name = "prescribes")
 public class Prescription {
@@ -22,7 +26,7 @@ public class Prescription {
     @ManyToOne
     @MapsId("physician")
     @JoinColumn(name = "physician", referencedColumnName = "employeeid")
-    private Physician physician;
+    private Physician physician; // The doctor who prescribed the medication
 
     @ManyToOne
     @MapsId("patient")
