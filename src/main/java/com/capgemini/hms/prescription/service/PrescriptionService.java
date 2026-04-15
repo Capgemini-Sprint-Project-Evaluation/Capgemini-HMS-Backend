@@ -16,6 +16,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/**
+ * PrescriptionService handles the business logic for managing patient prescriptions.
+ * It provides methods for creating new prescriptions with validation and retrieving
+ * prescription history for specific patients.
+ */
 @Service
 public class PrescriptionService {
 
