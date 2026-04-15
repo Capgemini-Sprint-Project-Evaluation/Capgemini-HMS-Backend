@@ -11,19 +11,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Table(name = "prescribes")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class Prescription {
 
     @EmbeddedId
@@ -50,4 +40,64 @@ public class Prescription {
 
     @Column(name = "dose", nullable = false)
     private String dose;
+
+    public Prescription() {
+    }
+
+    public Prescription(PrescriptionId id, Physician physician, Patient patient, Medication medication, Appointment appointment, String dose) {
+        this.id = id;
+        this.physician = physician;
+        this.patient = patient;
+        this.medication = medication;
+        this.appointment = appointment;
+        this.dose = dose;
+    }
+
+    public PrescriptionId getId() {
+        return id;
+    }
+
+    public void setId(PrescriptionId id) {
+        this.id = id;
+    }
+
+    public Physician getPhysician() {
+        return physician;
+    }
+
+    public void setPhysician(Physician physician) {
+        this.physician = physician;
+    }
+
+    public Patient getPatient() {
+        return patient;
+    }
+
+    public void setPatient(Patient patient) {
+        this.patient = patient;
+    }
+
+    public Medication getMedication() {
+        return medication;
+    }
+
+    public void setMedication(Medication medication) {
+        this.medication = medication;
+    }
+
+    public Appointment getAppointment() {
+        return appointment;
+    }
+
+    public void setAppointment(Appointment appointment) {
+        this.appointment = appointment;
+    }
+
+    public String getDose() {
+        return dose;
+    }
+
+    public void setDose(String dose) {
+        this.dose = dose;
+    }
 }
