@@ -1,4 +1,4 @@
-package com.capgemini.hms.appointment.controller;
+package com.capgemini.hms.appointment.controller.api;
 
 import com.capgemini.hms.appointment.dto.AppointmentDTO;
 import com.capgemini.hms.appointment.entity.Appointment;
@@ -7,7 +7,6 @@ import com.capgemini.hms.nurse.repository.NurseRepository;
 import com.capgemini.hms.patient.repository.PatientRepository;
 import com.capgemini.hms.physician.repository.PhysicianRepository;
 import jakarta.validation.Valid;
-import org.springframework.http.ResponseEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -81,11 +80,6 @@ public class AppointmentController {
         if (auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_PATIENT"))) {
             dto.setPatientSsn(getAuthenticatedPatientSsn());
         }
-        
-        // Manual validation for REQUIRED fields on Creation
-        if (dto.getPatientSsn() == null || dto.getPhysicianId() == null || dto.getStart() == null || dto.getEnd() == null || dto.getExaminationRoom() == null || dto.getExaminationRoom().isBlank()) {
-            throw new RuntimeException("Validation Failed: patientSsn, physicianId, start, end, and examinationRoom are mandatory for new bookings.");
-        }
 
         Appointment appointment = convertToEntity(dto);
         Appointment saved = appointmentService.bookAppointment(appointment);
@@ -121,8 +115,10 @@ public class AppointmentController {
         return new AppointmentDTO(
                 a.getAppointmentId(),
                 a.getPatient().getSsn(),
+                a.getPatient().getName(),
                 a.getPrepNurse() != null ? a.getPrepNurse().getEmployeeId() : null,
                 a.getPhysician().getEmployeeId(),
+                a.getPhysician().getName(),
                 a.getStart(),
                 a.getEnd(),
                 a.getExaminationRoom()

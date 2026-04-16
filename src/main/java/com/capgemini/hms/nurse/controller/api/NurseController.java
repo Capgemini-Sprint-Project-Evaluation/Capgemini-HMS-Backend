@@ -1,4 +1,4 @@
-package com.capgemini.hms.nurse.controller;
+package com.capgemini.hms.nurse.controller.api;
 
 import com.capgemini.hms.common.service.StaffService;
 import com.capgemini.hms.nurse.dto.NurseDTO;

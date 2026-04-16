@@ -1,4 +1,4 @@
-package com.capgemini.hms.procedure.controller;
+package com.capgemini.hms.procedure.controller.api;
 
 import com.capgemini.hms.procedure.dto.ProcedureDTO;
 import com.capgemini.hms.procedure.entity.Procedure;

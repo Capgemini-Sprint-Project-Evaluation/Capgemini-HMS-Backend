@@ -1,4 +1,4 @@
-package com.capgemini.hms.oncall.controller;
+package com.capgemini.hms.oncall.controller.api;
 
 import com.capgemini.hms.oncall.dto.OnCallDTO;
 import com.capgemini.hms.oncall.entity.OnCall;

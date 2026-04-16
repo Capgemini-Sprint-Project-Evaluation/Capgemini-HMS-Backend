@@ -1,4 +1,4 @@
-package com.capgemini.hms.medication.controller;
+package com.capgemini.hms.medication.controller.api;
 
 import com.capgemini.hms.medication.dto.MedicationDTO;
 import com.capgemini.hms.medication.entity.Medication;

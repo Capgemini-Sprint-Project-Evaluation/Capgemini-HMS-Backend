@@ -1,4 +1,4 @@
-package com.capgemini.hms.prescription.controller;
+package com.capgemini.hms.prescription.controller.api;
 
 import com.capgemini.hms.medication.entity.Medication;
 import com.capgemini.hms.patient.entity.Patient;
