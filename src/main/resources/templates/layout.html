@@ -1,26 +1,25 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org" th:fragment="layout(title, content)" class="light">
+<script src="https://cdn.tailwindcss.com"></script>
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title th:replace="${title}">Clinical Precision | HMS Dashboard</title>
-    
+    <title th:replace="${title}">Clinical Precision | HMS</title>
+
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com" rel="preconnect"/>
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
-    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet"/>
     <!-- Material Symbols -->
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-    
-    <!-- Tailwind CSS CDN -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script id="tailwind-config">
-          tailwind.config = {
+        tailwind.config = {
             darkMode: "class",
             theme: {
-              extend: {
-                "colors": {
+                extend: {
+                    colors: {
                         "secondary-fixed-dim": "#abcae8",
                         "secondary-container": "#c1e0ff",
                         "on-secondary": "#ffffff",
@@ -68,58 +67,58 @@
                         "surface-container": "#edeeef",
                         "primary-fixed-dim": "#92ccff",
                         "on-tertiary": "#ffffff"
-                },
-                "borderRadius": {
-                        "DEFAULT": "0.25rem",
-                        "lg": "0.5rem",
-                        "xl": "0.75rem",
-                        "full": "9999px"
-                },
-                "fontFamily": {
-                        "headline": ["Manrope"],
-                        "body": ["Inter"],
-                        "label": ["Inter"]
+                    },
+                    borderRadius: { DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px" },
+                    fontFamily: { headline: ["Manrope"], body: ["Inter"], label: ["Inter"] }
                 }
-              },
-            },
-          }
+            }
+        }
     </script>
     <style>
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-            vertical-align: middle;
-        }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
         body { font-family: 'Inter', sans-serif; }
-        h1, h2, h3, .display-lg, .font-headline { font-family: 'Manrope', sans-serif; }
+        h1, h2, h3, .font-headline { font-family: 'Manrope', sans-serif; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(12px);
-        }
-        .skeleton-shimmer {
-            background: linear-gradient(90deg, #f3f4f5 25%, #e7e8e9 50%, #f3f4f5 75%);
-            background-size: 200% 100%;
-        }
+        #toast { transition: opacity 0.4s ease, transform 0.4s ease; }
     </style>
+    <script src="/js/main.js"></script>
 </head>
-<body class="bg-surface text-on-surface font-body selection:bg-primary-container selection:text-on-primary-container">
+<body class="bg-surface text-on-surface font-body">
 
-    <!-- SideNavBar Shell -->
+    <!-- Sidebar -->
     <aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
 
-    <!-- Main Content Area -->
+    <!-- Main Content -->
     <main class="ml-64 min-h-screen">
-        <!-- TopNavBar Shell -->
         <header th:replace="~{fragments/header :: header}"></header>
-
-        <!-- Dynamic Page Content -->
-        <div th:replace="${content}">
-            <!-- Page content will be injected here -->
-        </div>
+        <div th:replace="${content}"></div>
     </main>
 
-    <!-- Custom App JS -->
-    <script th:src="@{/js/main.js}"></script>
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 z-[200] opacity-0 translate-y-4 pointer-events-none">
+        <div id="toast-inner" class="flex items-center gap-3 px-5 py-3 rounded-xl shadow-xl text-white text-sm font-semibold bg-on-surface">
+            <span class="material-symbols-outlined text-base" id="toast-icon">check_circle</span>
+            <span id="toast-msg">Done</span>
+        </div>
+    </div>
+
+    <script>
+        // Initialize sidebar/header roles using helpers from main.js
+        (function initHeader() {
+            const u = getUser();
+            const sidebarName = document.getElementById('sidebar-username');
+            const sidebarAvatar = document.getElementById('sidebar-avatar');
+            const headerRoleBadge = document.getElementById('header-role-badge');
+
+            if (u && u.username) {
+                if (sidebarName) sidebarName.textContent = u.username;
+                if (sidebarAvatar) sidebarAvatar.textContent = u.username.substring(0,2).toUpperCase();
+            }
+            const role = getRole();
+            if (role) {
+                if (headerRoleBadge) headerRoleBadge.textContent = role;
+            }
+        })();
+    </script>
 </body>
 </html>
-<!-- Frontend rendering pipeline verified -->

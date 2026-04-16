@@ -3,6 +3,9 @@ package com.capgemini.hms.auth.config;
 import com.capgemini.hms.auth.entity.ERole;
 import com.capgemini.hms.auth.entity.Role;
 import com.capgemini.hms.auth.entity.User;
+import com.capgemini.hms.room.entity.Block;
+import com.capgemini.hms.room.entity.BlockId;
+import com.capgemini.hms.room.repository.BlockRepository;
 import com.capgemini.hms.auth.repository.RoleRepository;
 import com.capgemini.hms.auth.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
@@ -29,6 +32,7 @@ public class SystemInitializer implements CommandLineRunner {
     @Autowired private UserRepository userRepository;
     @Autowired private RoleRepository roleRepository;
     @Autowired private PasswordEncoder encoder;
+    @Autowired private BlockRepository blockRepository;
 
     @Override
     public void run(String... args) throws Exception {
@@ -62,6 +66,20 @@ public class SystemInitializer implements CommandLineRunner {
             System.out.println("ℹ️ Primary Admin account already exists. Skipping.");
         }
 
+        // 3. Ensure Physical Block infrastructure exists
+        initializeBlocks();
+
         System.out.println("--- HMS SYSTEM INITIALIZATION: COMPLETED ---");
+    }
+
+    private void initializeBlocks() {
+        BlockId blockId = new BlockId(2, 1);
+        if (!blockRepository.existsById(blockId)) {
+            System.out.println("Initializing required clinical block: Floor 2, Code 1");
+            Block block = new Block();
+            block.setId(blockId);
+            blockRepository.save(block);
+            System.out.println("✅ Clinical block initialized successfully.");
+        }
     }
 }

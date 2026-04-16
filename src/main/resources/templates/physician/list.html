@@ -1,155 +1,238 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::title}, ~{::section})}">
-<head>
-    <title>Physician Directory - MedCare HMS</title>
-</head>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout :: layout(~{::title}, ~{::section})}">
+<head><title>Physicians — HMS</title></head>
 <body>
-    <section class="p-8 min-h-screen">
-        <!-- Header Section -->
-        <div class="mb-10">
-            <h1 class="text-4xl font-extrabold text-sky-900 tracking-tight mb-2 font-headline">Physician Directory</h1>
-            <p class="text-slate-500 max-w-2xl font-medium">Access our global network of specialized practitioners. Advanced filtering allows for precise diagnostic matching based on expertise and performance metrics.</p>
-        </div>
+<section class="p-8 min-h-screen">
 
-        <!-- Filter Bar (Departments) -->
-        <div class="mb-8 overflow-x-auto">
-            <div class="flex items-center gap-3 min-w-max pb-2">
-                <button class="px-6 py-2.5 rounded-full bg-gradient-to-r from-primary to-primary-container text-white font-semibold text-sm shadow-md shadow-primary/20 hover:scale-105 transition-transform">
-                    All Specialties
-                </button>
-                <button class="px-6 py-2.5 rounded-full bg-surface-container-high text-on-surface-variant font-semibold text-sm hover:bg-surface-container-highest transition-colors">
-                    Cardiology
-                </button>
-                <button class="px-6 py-2.5 rounded-full bg-surface-container-high text-on-surface-variant font-semibold text-sm hover:bg-surface-container-highest transition-colors">
-                    Neurology
-                </button>
-                <button class="px-6 py-2.5 rounded-full bg-surface-container-high text-on-surface-variant font-semibold text-sm hover:bg-surface-container-highest transition-colors">
-                    Oncology
-                </button>
-                <button class="px-6 py-2.5 rounded-full bg-surface-container-high text-on-surface-variant font-semibold text-sm hover:bg-surface-container-highest transition-colors">
-                    Pediatrics
-                </button>
-                <button class="px-6 py-2.5 rounded-full bg-surface-container-high text-on-surface-variant font-semibold text-sm hover:bg-surface-container-highest transition-colors">
-                    Orthopedics
-                </button>
-                <button class="px-6 py-2.5 rounded-full bg-surface-container-high text-on-surface-variant font-semibold text-sm hover:bg-surface-container-highest transition-colors">
-                    Psychiatry
+    <div class="flex justify-between items-end mb-8">
+        <div>
+            <h2 class="text-3xl font-extrabold tracking-tight text-on-surface font-headline">Physicians</h2>
+            <p class="text-on-surface-variant mt-1">Manage physician profiles and assignments.</p>
+        </div>
+        <button onclick="openModal()" data-admin-only class="inline-flex items-center gap-2 px-5 py-3 bg-primary text-white font-semibold rounded-xl hover:bg-sky-700 transition-all active:scale-95 shadow-lg shadow-primary/20 text-sm">
+            <span class="material-symbols-outlined">person_add</span> Add Physician
+        </button>
+    </div>
+
+    <!-- Search -->
+    <div class="flex gap-3 mb-6">
+        <div class="relative flex-1 max-w-sm">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-xl">search</span>
+            <input id="search-input" type="text" placeholder="Search by name or position…"
+                   class="w-full pl-10 pr-4 py-2.5 bg-surface-container-lowest border border-outline-variant/30 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"/>
+        </div>
+        <button onclick="doSearch()" class="px-4 py-2.5 bg-surface-container text-on-surface text-sm font-medium rounded-xl hover:bg-surface-container-high transition-colors">Search</button>
+        <button onclick="loadPhysicians(0)" class="px-4 py-2.5 bg-surface-container text-on-surface text-sm font-medium rounded-xl hover:bg-surface-container-high transition-colors">Reset</button>
+    </div>
+
+    <!-- Table -->
+    <div class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="bg-surface-container-low/50">
+                        <th class="px-6 py-4 text-xs font-bold text-outline uppercase tracking-wider">Employee ID</th>
+                        <th class="px-6 py-4 text-xs font-bold text-outline uppercase tracking-wider">Name</th>
+                        <th class="px-6 py-4 text-xs font-bold text-outline uppercase tracking-wider">Position</th>
+                        <th class="px-6 py-4 text-xs font-bold text-outline uppercase tracking-wider">SSN</th>
+                        <th class="px-6 py-4 text-xs font-bold text-outline uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="physician-tbody" class="divide-y divide-surface-container-low/50">
+                    <tr><td colspan="5" class="px-6 py-8 text-center text-outline text-sm">Loading…</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="px-6 py-4 flex justify-between items-center border-t border-surface-container-low text-sm text-on-surface-variant">
+            <span id="page-info">—</span>
+            <div id="pager"></div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/20 backdrop-blur-sm">
+        <div class="bg-surface-container-lowest w-full max-w-md rounded-2xl shadow-2xl p-8 m-4">
+            <div class="flex justify-between items-start mb-6">
+                <h3 class="text-xl font-extrabold text-on-surface font-headline" id="modal-title">Add Physician</h3>
+                <button onclick="closeModal()" class="p-2 hover:bg-surface-container-low rounded-full">
+                    <span class="material-symbols-outlined text-outline">close</span>
                 </button>
             </div>
-        </div>
-
-        <!-- Doctor Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            <!-- Doctor Card 1 -->
-            <div class="bg-surface-container-lowest rounded-xl p-5 shadow-sm shadow-sky-900/5 group hover:shadow-xl hover:shadow-sky-900/10 transition-all duration-300 flex flex-col">
-                <div class="relative mb-4 overflow-hidden rounded-xl aspect-[4/5] bg-slate-200">
-                    <img alt="Dr. Sarah Jenkins" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAPj-zPLg012nc9HsUE0xFyhkoGC-8mkAfF7uc5cKZcSrEZnXRgd9FYYbisMMETBj0b00ot-kn96D3fLhJFSveds3CwCxd8Fd1cMPxHNI3xcSQ2H4SrymASqDggkEojHFjNo3RaBHkxlTqV8rXVC3gkbMdVCjrfDrOTLoaOqyy3wp4gP5Y6-eq498RX5T32eV1wEzhu9dmFfkJLl2-1A0d-MnOrcFz7t10AsWw8fJ98WazXD5PfsHd2dWEpZd3Q0vwsXhLzA38l_Te6"/>
-                    <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold text-sky-900 uppercase tracking-widest shadow-sm">
-                        On Duty
+            <input type="hidden" id="f-id-hidden"/>
+            <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-xs font-semibold text-outline uppercase tracking-wider">Employee ID *</label>
+                        <input id="f-id" type="number" placeholder="101" class="field-input mt-1"/>
+                    </div>
+                    <div>
+                        <label class="text-xs font-semibold text-outline uppercase tracking-wider">SSN *</label>
+                        <input id="f-ssn" type="number" placeholder="900000001" class="field-input mt-1"/>
                     </div>
                 </div>
-                <div class="flex-1">
-                    <h3 class="text-lg font-bold text-on-surface mb-0.5 group-hover:text-primary transition-colors">Dr. Sarah Jenkins</h3>
-                    <p class="text-xs font-semibold text-primary-container mb-3">Senior Cardiologist</p>
-                    <div class="flex items-center gap-2 mb-4">
-                        <span class="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full text-[11px] font-bold">
-                            Cardiology
-                        </span>
-                        <span class="bg-tertiary-fixed text-on-tertiary-fixed px-3 py-1 rounded-full text-[11px] font-bold flex items-center">
-                            <span class="material-symbols-outlined text-[14px] mr-1" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
-                            4.9
-                        </span>
-                    </div>
-                    <div class="space-y-2 mb-6">
-                        <div class="flex items-center text-on-surface-variant text-xs">
-                            <span class="material-symbols-outlined text-[18px] mr-2 text-slate-400" data-icon="work">work</span>
-                            <span>12 Years Experience</span>
-                        </div>
-                        <div class="flex items-center text-on-surface-variant text-xs">
-                            <span class="material-symbols-outlined text-[18px] mr-2 text-slate-400" data-icon="task_alt">task_alt</span>
-                            <span class="font-bold">1,240 Cases Handled</span>
-                        </div>
-                    </div>
+                <div>
+                    <label class="text-xs font-semibold text-outline uppercase tracking-wider">Full Name *</label>
+                    <input id="f-name" type="text" placeholder="Dr. Alice Morgan" class="field-input mt-1"/>
                 </div>
-                <button class="w-full py-3 bg-surface-container-high text-on-surface font-bold text-sm rounded-xl hover:bg-primary hover:text-white transition-all">
-                    View Full Profile
-                </button>
-            </div>
-
-            <!-- Doctor Card 2 -->
-            <div class="bg-surface-container-lowest rounded-xl p-5 shadow-sm shadow-sky-900/5 group hover:shadow-xl hover:shadow-sky-900/10 transition-all duration-300 flex flex-col">
-                <div class="relative mb-4 overflow-hidden rounded-xl aspect-[4/5] bg-slate-200">
-                    <img alt="Dr. Marcus Thorne" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcA2lH7xpoCPgK5iFYzhq4sJ4gJdUNQ9mmrLycCPDAVyvLvmloJH98M7YsTtYlRC-hTLLb5wc9kirOiw564Q8IGXih8lVew7PaIBg3SClpUXGx0aiSgNdAXBp8PV0qnWWNTZmkPdImHAHDttr9PMFlU9DjCh4eSwpir1oJBvFSXXuEKxUmPcQpF-97ezY77kDIJmk65XntQsUeVJrwZlNTHP-gQNTfXzfzYexgAV1lWsBqCfhLTwNUUZFCjGkUnkSRASV6QtOSRUxn"/>
+                <div>
+                    <label class="text-xs font-semibold text-outline uppercase tracking-wider">Position *</label>
+                    <input id="f-position" type="text" placeholder="Head of Surgery" class="field-input mt-1"/>
                 </div>
-                <div class="flex-1">
-                    <h3 class="text-lg font-bold text-on-surface mb-0.5 group-hover:text-primary transition-colors">Dr. Marcus Thorne</h3>
-                    <p class="text-xs font-semibold text-primary-container mb-3">Chief of Neurology</p>
-                    <div class="flex items-center gap-2 mb-4">
-                        <span class="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full text-[11px] font-bold">
-                            Neurology
-                        </span>
-                        <span class="bg-tertiary-fixed text-on-tertiary-fixed px-3 py-1 rounded-full text-[11px] font-bold flex items-center">
-                            <span class="material-symbols-outlined text-[14px] mr-1" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
-                            5.0
-                        </span>
-                    </div>
-                    <div class="space-y-2 mb-6">
-                        <div class="flex items-center text-on-surface-variant text-xs">
-                            <span class="material-symbols-outlined text-[18px] mr-2 text-slate-400" data-icon="work">work</span>
-                            <span>18 Years Experience</span>
-                        </div>
-                        <div class="flex items-center text-on-surface-variant text-xs">
-                            <span class="material-symbols-outlined text-[18px] mr-2 text-slate-400" data-icon="task_alt">task_alt</span>
-                            <span class="font-bold">2,105 Cases Handled</span>
-                        </div>
-                    </div>
+                <div id="modal-err" class="hidden text-error text-sm bg-error-container rounded-lg px-3 py-2"></div>
+                <div class="flex gap-3 pt-2">
+                    <button onclick="closeModal()" class="flex-1 py-3 bg-surface-container-high text-on-surface-variant font-bold rounded-xl text-sm">Cancel</button>
+                    <button onclick="savePhysician()" id="save-btn" class="flex-[2] py-3 bg-primary text-white font-bold rounded-xl hover:bg-sky-700 active:scale-95 text-sm shadow-lg shadow-primary/20">Save</button>
                 </div>
-                <button class="w-full py-3 bg-surface-container-high text-on-surface font-bold text-sm rounded-xl hover:bg-primary hover:text-white transition-all">
-                    View Full Profile
-                </button>
-            </div>
-
-            <!-- Doctor Card 3 -->
-            <div class="bg-surface-container-lowest rounded-xl p-5 shadow-sm shadow-sky-900/5 group hover:shadow-xl hover:shadow-sky-900/10 transition-all duration-300 flex flex-col">
-                <div class="relative mb-4 overflow-hidden rounded-xl aspect-[4/5] bg-slate-200">
-                    <img alt="Dr. David Chen" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuChRoJgMocNm4G_6LMwXkLwXwm3GECwE5yieVInEgkvd1s8IufHJyapJJ0XZ1SAFfYrv_cGoeHB3lnsj-OJ0wJqIYXGNDdul7UdrGO7L0ihWsbLjiydeECiwL17T9e9MM0HAPTL8pREiW_APuaZfp7BOizu7shuEp1CL0aPMuAWqHzaX88vG19AHijYDceN4gvnVQpDArLrt6g5EAqOehWq-5OOo6UKHnlurvoqX4MatyOee8eyCDr_vdkhT_knThp2QitUttaPLqJa"/>
-                </div>
-                <div class="flex-1">
-                    <h3 class="text-lg font-bold text-on-surface mb-0.5 group-hover:text-primary transition-colors">Dr. David Chen</h3>
-                    <p class="text-xs font-semibold text-primary-container mb-3">Orthopedic Surgeon</p>
-                    <div class="flex items-center gap-2 mb-4">
-                        <span class="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full text-[11px] font-bold">
-                            Orthopedics
-                        </span>
-                        <span class="bg-tertiary-fixed text-on-tertiary-fixed px-3 py-1 rounded-full text-[11px] font-bold flex items-center">
-                            <span class="material-symbols-outlined text-[14px] mr-1" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
-                            4.6
-                        </span>
-                    </div>
-                    <div class="space-y-2 mb-6">
-                        <div class="flex items-center text-on-surface-variant text-xs">
-                            <span class="material-symbols-outlined text-[18px] mr-2 text-slate-400" data-icon="work">work</span>
-                            <span>6 Years Experience</span>
-                        </div>
-                        <div class="flex items-center text-on-surface-variant text-xs">
-                            <span class="material-symbols-outlined text-[18px] mr-2 text-slate-400" data-icon="task_alt">task_alt</span>
-                            <span class="font-bold">720 Cases Handled</span>
-                        </div>
-                    </div>
-                </div>
-                <button class="w-full py-3 bg-surface-container-high text-on-surface font-bold text-sm rounded-xl hover:bg-primary hover:text-white transition-all">
-                    View Full Profile
-                </button>
             </div>
         </div>
+    </div>
 
-        <!-- Pagination / Load More -->
-        <div class="mt-12 flex justify-center">
-            <button class="flex items-center gap-2 px-8 py-4 bg-surface-container-low text-primary font-bold rounded-xl hover:bg-primary-container hover:text-white transition-all shadow-sm">
-                <span>Load More Physicians</span>
-                <span class="material-symbols-outlined text-[20px]" data-icon="keyboard_arrow_down">keyboard_arrow_down</span>
-            </button>
-        </div>
-    </section>
-</body>
-</html>
+    <style>
+    .field-input { display:block; width:100%; padding:0.6rem 0.875rem; background:#f3f4f5; border:none; border-radius:0.75rem; font-size:0.875rem; outline:none; }
+    .field-input:focus { background:#fff; box-shadow:0 0 0 2px rgba(0,99,151,0.15); }
+    </style>
+
+    <script>
+    let currentPage = 0;
+    let currentList = [];
+    let editMode = false;
+
+    async function loadPhysicians(page) {
+        currentPage = page;
+        const tbody = document.getElementById('physician-tbody');
+        tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-outline text-sm">Loading…</td></tr>';
+        
+        try {
+            const res = await apiFetch('/api/v1/physicians?page=' + page + '&size=10&sort=employeeId,asc');
+            if (!res || !res.data) return;
+            
+            const data = res.data;
+            currentList = data.content || [];
+            
+            document.getElementById('page-info').textContent = 'Page ' + (data.pageNo + 1) + ' of ' + data.totalPages + ' (' + data.totalElements + ' records)';
+            buildPaginationControls('pager', data.totalPages, data.pageNo, 'loadPhysicians');
+            
+            if (currentList.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-outline text-sm">No physicians found.</td></tr>'; 
+            } else {
+                tbody.innerHTML = currentList.map(p =>
+                    '<tr class="hover:bg-primary-fixed/20 transition-colors">' +
+                        '<td class="px-6 py-4 text-sm font-medium text-primary">' + p.employeeId + '</td>' +
+                        '<td class="px-6 py-4">' +
+                            '<div class="flex items-center gap-2">' +
+                                '<div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary flex-shrink-0">' + (p.name || '??').split(' ').map(x=>x[0]).join('').toUpperCase() + '</div>' +
+                                '<span class="font-semibold text-on-surface text-sm">' + p.name + '</span>' +
+                            '</div>' +
+                        '</td>' +
+                        '<td class="px-6 py-4 text-sm text-on-surface-variant">' + p.position + '</td>' +
+                        '<td class="px-6 py-4 text-sm text-on-surface-variant">' + p.ssn + '</td>' +
+                        '<td class="px-6 py-4">' +
+                            '<div class="flex gap-2">' +
+                                '<button onclick="openEditById(' + p.employeeId + ')" data-admin-only class="p-1.5 hover:bg-primary-fixed/30 rounded-lg text-primary"><span class="material-symbols-outlined text-lg">edit</span></button>' +
+                                '<button onclick="deletePhysician(' + p.employeeId + ')" data-admin-only class="p-1.5 hover:bg-error-container rounded-lg text-error"><span class="material-symbols-outlined text-lg">delete</span></button>' +
+                            '</div>' +
+                        '</td>' +
+                    '</tr>').join('');
+            }
+            applyRoleVisibility();
+        } catch(e) { 
+            console.error(e);
+            tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-error text-sm">Failed to load: ' + e.message + '</td></tr>'; 
+        }
+    }
+
+    async function doSearch() {
+        const q = document.getElementById('search-input').value.trim();
+        if (!q) { loadPhysicians(0); return; }
+        const tbody = document.getElementById('physician-tbody');
+        tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-outline text-sm">Searching…</td></tr>';
+        try {
+            const res = await apiFetch('/api/v1/physicians/search?query=' + encodeURIComponent(q) + '&page=0&size=20');
+            if (!res || !res.data) return;
+            currentList = res.data.content || [];
+            document.getElementById('page-info').textContent = res.data.totalElements + ' result(s)';
+            if (currentList.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-outline text-sm">No matches.</td></tr>';
+            } else {
+                tbody.innerHTML = currentList.map(p =>
+                    '<tr class="hover:bg-primary-fixed/20 transition-colors">' +
+                        '<td class="px-6 py-4 text-sm font-medium text-primary">' + p.employeeId + '</td>' +
+                        '<td class="px-6 py-4 font-semibold text-on-surface text-sm">' + p.name + '</td>' +
+                        '<td class="px-6 py-4 text-sm text-on-surface-variant">' + p.position + '</td>' +
+                        '<td class="px-6 py-4 text-sm text-on-surface-variant">' + p.ssn + '</td>' +
+                        '<td class="px-6 py-4">' +
+                            '<div class="flex gap-2">' +
+                                '<button onclick="openEditById(' + p.employeeId + ')" data-admin-only class="p-1.5 hover:bg-primary-fixed/30 rounded-lg text-primary"><span class="material-symbols-outlined text-lg">edit</span></button>' +
+                                '<button onclick="deletePhysician(' + p.employeeId + ')" data-admin-only class="p-1.5 hover:bg-error-container rounded-lg text-error"><span class="material-symbols-outlined text-lg">delete</span></button>' +
+                            '</div>' +
+                        '</td>' +
+                    '</tr>').join('');
+            }
+            applyRoleVisibility();
+        } catch(e) { console.error(e); }
+    }
+
+    function openEditById(id) {
+        const p = currentList.find(x => x.employeeId === id);
+        if (!p) return;
+        editMode = true;
+        document.getElementById('modal-title').textContent = 'Edit Physician';
+        document.getElementById('save-btn').textContent = 'Update';
+        document.getElementById('f-id').value = p.employeeId; 
+        document.getElementById('f-id').disabled = true;
+        document.getElementById('f-id-hidden').value = p.employeeId;
+        document.getElementById('f-ssn').value = p.ssn;
+        document.getElementById('f-name').value = p.name;
+        document.getElementById('f-position').value = p.position;
+        document.getElementById('modal-err').classList.add('hidden');
+        document.getElementById('modal').classList.replace('hidden','flex');
+    }
+
+    function openModal() {
+        editMode = false;
+        document.getElementById('modal-title').textContent = 'Add Physician';
+        document.getElementById('save-btn').textContent = 'Save Physician';
+        ['f-id','f-ssn','f-name','f-position'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('f-id').disabled = false;
+        document.getElementById('modal-err').classList.add('hidden');
+        document.getElementById('modal').classList.replace('hidden','flex');
+    }
+
+    function closeModal() { document.getElementById('modal').classList.replace('flex','hidden'); }
+
+    async function savePhysician() {
+        const errEl = document.getElementById('modal-err'); 
+        errEl.classList.add('hidden');
+        const id = editMode ? parseInt(document.getElementById('f-id-hidden').value) : parseInt(document.getElementById('f-id').value);
+        const payload = { employeeId: id, name: document.getElementById('f-name').value.trim(), position: document.getElementById('f-position').value.trim(), ssn: parseInt(document.getElementById('f-ssn').value) };
+        if (!payload.employeeId || !payload.name || !payload.position || !payload.ssn) { 
+            errEl.textContent = 'All fields are required.'; errEl.classList.remove('hidden'); return; 
+        }
+        const btn = document.getElementById('save-btn'); 
+        btn.disabled = true;
+        try {
+            const res = await apiFetch(editMode ? '/api/v1/physicians/' + id : '/api/v1/physicians', { method: editMode ? 'PUT' : 'POST', body: JSON.stringify(payload) });
+            if (res && res.success) {
+                showToast(editMode ? 'Physician updated!' : 'Physician added!');
+                closeModal(); loadPhysicians(currentPage);
+            } else if (res) {
+                errEl.textContent = res.message || 'Error saving physician.';
+                errEl.classList.remove('hidden');
+            }
+        } catch(e) { errEl.textContent = e.message; errEl.classList.remove('hidden'); }
+        finally { btn.disabled = false; }
+    }
+
+    async function deletePhysician(id) {
+        confirmAction('Delete physician ID ' + id + '?', async () => {
+            const res = await apiFetch('/api/v1/physicians/' + id, { method: 'DELETE' });
+            if (res && res.success) { showToast('Physician deleted.'); loadPhysicians(currentPage); }
+        });
+    }
+
+    // Init
+    loadPhysicians(0);
+    document.getElementById('search-input').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+    </script>
+</section>

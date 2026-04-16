@@ -63,7 +63,8 @@ public class ReportingService {
                 roomRepository.countByUnavailableTrue(),
                 roomRepository.count(),
                 revenue,
-                appointmentRepository.countByStartBetween(startOfDay, endOfDay)
+                appointmentRepository.countByStartBetween(startOfDay, endOfDay),
+                appointmentRepository.count()
         );
     }
 
