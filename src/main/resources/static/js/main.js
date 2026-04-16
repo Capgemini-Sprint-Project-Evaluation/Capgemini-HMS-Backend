@@ -4,16 +4,11 @@
  */
 
 const HMS_CONFIG = {
-    TOKEN_KEY: 'hms_accessToken',
     USER_KEY: 'hms_user',
     API_BASE: '/api/v1'
 };
 
 // ─── AUTH HELPERS ────────────────────────────────────────────────────────────
-
-function getToken() {
-    return localStorage.getItem(HMS_CONFIG.TOKEN_KEY);
-}
 
 function getUser() {
     try {
@@ -24,14 +19,18 @@ function getUser() {
 }
 
 function logout() {
-    localStorage.removeItem(HMS_CONFIG.TOKEN_KEY);
-    localStorage.removeItem('hms_refreshToken');
-    localStorage.removeItem('hms_tokenType');
-    localStorage.removeItem(HMS_CONFIG.USER_KEY);
-    window.location.href = '/login';
+    // We now use a form POST to /logout for CSRF compatibility.
+    // This JS helper is kept for cleanup if invoked.
+    localStorage.clear();
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/logout';
+    document.body.appendChild(form);
+    form.submit();
 }
 
 function getRole() {
+    // Fallback if not using server-side rendering for a specific element
     const user = getUser();
     return (user.roles && user.roles[0]) ? user.roles[0].replace('ROLE_', '') : null;
 }
@@ -40,65 +39,28 @@ function isAdmin() { return getRole() === 'ADMIN'; }
 function isDoctor() { return getRole() === 'DOCTOR'; }
 function isNurse() { return getRole() === 'NURSE'; }
 
-// Global Auth Guard: Redirect to login if token missing (unless already on login page)
-if (!localStorage.getItem('hms_accessToken') && !window.location.pathname.includes('/login')) {
-    window.location.href = '/login';
-}
-
 /**
- * Handle Silent Token Refresh
- */
-async function refreshAuthToken() {
-    const refreshToken = localStorage.getItem('hms_refreshToken');
-    if (!refreshToken || window.location.pathname.includes('/login')) return;
-
-    try {
-        const res = await fetch('/api/v1/auth/refresh', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ refreshToken })
-        });
-        const data = await res.json();
-        if (data.success && data.data.accessToken) {
-            localStorage.setItem(HMS_CONFIG.TOKEN_KEY, data.data.accessToken);
-            console.log('Token refreshed successfully');
-        } else {
-            logout();
-        }
-    } catch (e) {
-        console.error('Silent refresh failed', e);
-    }
-}
-
-// Refresh every 15 minutes
-if (localStorage.getItem('hms_accessToken')) {
-    setInterval(refreshAuthToken, 15 * 60 * 1000);
-}
-
-/**
- * Centralized API Fetch utility with interceptors
+ * Centralized API Fetch utility
+ * Automatically includes session cookies. For POST/PUT/DELETE, Ensure CSRF is handled.
  */
 async function apiFetch(url, options = {}) {
-    // 1. Token attachment
-    const token = getToken();
-    const isAuthRequest = url.includes('/auth/login') || url.includes('/auth/register');
-
-    if (!token && !isAuthRequest) {
-        window.location.href = '/login';
-        return null;
-    }
-
     options.headers = {
         'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest', // Helps Spring detect AJAX
         ...options.headers
     };
 
-    if (token) {
-        options.headers['Authorization'] = `Bearer ${token}`;
+    // Note: JSESSIONID cookie is sent automatically by the browser.
+    // If CSRF is CookieCsrfTokenRepository.withHttpOnlyFalse(), we should read the XSRF-TOKEN cookie.
+    const csrfToken = document.cookie.split('; ')
+        .find(row => row.startsWith('XSRF-TOKEN='))
+        ?.split('=')[1];
+    
+    if (csrfToken && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(options.method?.toUpperCase())) {
+        options.headers['X-XSRF-TOKEN'] = csrfToken;
     }
 
     try {
-        // Auto-fix paths if needed
         let finalUrl = url;
         if (url.startsWith('api/')) finalUrl = '/' + url;
         
@@ -106,7 +68,7 @@ async function apiFetch(url, options = {}) {
 
         if (response.status === 401) {
             console.warn('Unauthorized access, redirecting to login...');
-            logout();
+            window.location.href = '/login';
             return null;
         }
 
@@ -121,11 +83,7 @@ async function apiFetch(url, options = {}) {
             return null;
         }
 
-        // 3. Return parsed JSON and map status to success if needed
         const result = await response.json();
-        if (typeof result.success === 'undefined' && result.status) {
-            result.success = (result.status === 'success');
-        }
         return result;
     } catch (error) {
         console.error('API Fetch Error:', error);

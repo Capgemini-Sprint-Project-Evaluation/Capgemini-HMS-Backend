@@ -4,9 +4,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
 /**
- * View controller for the Login page.
- * Authentication is done client-side via fetch → POST /api/v1/auth/signin
- * JWT token is stored in localStorage after successful login.
+ * View controller for Auth pages.
+ * login is handled via standard Form POST to /login.
+ * signup is handled via AJAX to /api/v1/auth/signup (CSRF protected).
  */
 @Controller
 public class AuthViewController {

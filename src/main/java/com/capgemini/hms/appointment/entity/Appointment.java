@@ -39,7 +39,9 @@ public class Appointment {
     @Column(name = "start", nullable = false)
     private LocalDateTime start;
 
+
     @Column(name = "examinationroom", nullable = false)
+
     private String examinationRoom;
 
     @Column(name = "is_deleted")

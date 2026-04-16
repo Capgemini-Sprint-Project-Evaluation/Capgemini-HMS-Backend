@@ -7,16 +7,23 @@
         </div>
     </div>
     <div class="flex items-center gap-3 ml-6">
-        <span class="text-xs font-medium text-outline px-3 py-1 bg-surface-container rounded-full" id="header-role-badge"></span>
-        <button onclick="logout()" class="flex items-center gap-1 px-3 py-1.5 text-sm text-outline hover:text-error hover:bg-error-container/30 rounded-lg transition-colors font-medium">
-            <span class="material-symbols-outlined text-base">logout</span>Logout
-        </button>
+        <span class="text-xs font-medium text-outline px-3 py-1 bg-surface-container rounded-full" 
+              sec:authentication="principal.authorities[0].authority"
+              id="header-role-badge"></span>
+        
+        <form th:action="@{/logout}" method="POST" class="inline">
+            <button type="submit" class="flex items-center gap-1 px-3 py-1.5 text-sm text-outline hover:text-error hover:bg-error-container/30 rounded-lg transition-colors font-medium">
+                <span class="material-symbols-outlined text-base">logout</span>Logout
+            </button>
+        </form>
     </div>
     <script>
-        (function() {
-            const u = JSON.parse(localStorage.getItem('hms_user') || '{}');
+        // Optional: Clean up ROLE_ prefix if needed visually
+        document.addEventListener("DOMContentLoaded", function() {
             const el = document.getElementById('header-role-badge');
-            if (el && u.roles && u.roles[0]) el.textContent = u.roles[0].replace('ROLE_','');
-        })();
+            if (el && el.textContent) {
+                el.textContent = el.textContent.replace('ROLE_', '');
+            }
+        });
     </script>
 </header>

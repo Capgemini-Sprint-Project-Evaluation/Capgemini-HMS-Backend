@@ -1,12 +1,9 @@
-package com.capgemini.hms.auth.controller.api;
+package com.capgemini.hms.auth.controller;
 
 import com.capgemini.hms.auth.entity.ERole;
 import com.capgemini.hms.auth.entity.Role;
 import com.capgemini.hms.auth.entity.User;
-import com.capgemini.hms.auth.payload.request.LoginRequest;
 import com.capgemini.hms.auth.payload.request.SignupRequest;
-import com.capgemini.hms.auth.payload.request.TokenRefreshRequest;
-import com.capgemini.hms.auth.payload.response.JwtResponse;
 import com.capgemini.hms.auth.payload.response.MessageResponse;
 import com.capgemini.hms.auth.repository.RoleRepository;
 import com.capgemini.hms.auth.repository.UserRepository;
@@ -14,33 +11,25 @@ import com.capgemini.hms.common.dto.ApiResponse;
 import com.capgemini.hms.nurse.repository.NurseRepository;
 import com.capgemini.hms.patient.repository.PatientRepository;
 import com.capgemini.hms.physician.repository.PhysicianRepository;
-import com.capgemini.hms.security.jwt.JwtUtils;
-import com.capgemini.hms.security.services.UserDetailsImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/v1/auth")
-@Tag(name = "User Authentication", description = "Endpoints for user login and registration")
+@Tag(name = "User Authentication", description = "Endpoints for user registration (Login/Logout handled by Spring Security)")
 public class AuthController {
-    @Autowired
-    AuthenticationManager authenticationManager;
 
     @Autowired
     UserRepository userRepository;
@@ -60,62 +49,8 @@ public class AuthController {
     @Autowired
     PasswordEncoder encoder;
 
-    @Autowired
-    JwtUtils jwtUtils;
-
-    @PostMapping("/signin")
-    @Operation(summary = "Login to the system", description = "Authenticates user and returns a JWT token")
-    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
-        
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
-
-        String jwt = jwtUtils.generateJwtToken(authentication);
-        String refreshToken = jwtUtils.generateRefreshToken(authentication);
-        
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        List<String> roles = userDetails.getAuthorities().stream()
-                .map(item -> item.getAuthority())
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(ApiResponse.success(new JwtResponse(jwt,
-                refreshToken,
-                userDetails.getId(),
-                userDetails.getUsername(),
-                userDetails.getEmail(),
-                roles,
-                userDetails.getPatientSsn(),
-                userDetails.getStaffId())));
-    }
-
-    @PostMapping("/refresh")
-    @Operation(summary = "Refresh access token", description = "Renews an expired access token using a valid refresh token")
-    public ResponseEntity<?> refreshToken(@Valid @RequestBody TokenRefreshRequest request) {
-        String requestRefreshToken = request.getRefreshToken();
-        
-        if (jwtUtils.validateJwtToken(requestRefreshToken)) {
-            String email = jwtUtils.getEmailFromJwtToken(requestRefreshToken);
-            User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new RuntimeException("User not found: " + email));
-            
-            String token = jwtUtils.generateTokenFromEmail(user.getEmail(), 86400000); // 1 day
-            String newRefreshToken = jwtUtils.generateTokenFromEmail(user.getEmail(), 604800000); // 7 days
-            
-            return ResponseEntity.ok(ApiResponse.success(new JwtResponse(token,
-                    newRefreshToken,
-                    user.getId(),
-                    user.getUsername(),
-                    user.getEmail(),
-                    user.getRoles().stream().map(r -> r.getName().name()).collect(Collectors.toList()),
-                    user.getPatientSsn(),
-                    user.getStaffId())));
-        }
-        
-        return ResponseEntity.badRequest().body(new MessageResponse("Refresh token is invalid!"));
-    }
-
     @PostMapping("/signup")
-    @Operation(summary = "Register a new user", description = "Creates a new user account with specified roles")
+    @Operation(summary = "Register a new user", description = "Creates a new user account with specified roles. Note: Regular user login is handled by /login endpoint.")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
         if (userRepository.existsByUsername(signUpRequest.getUsername())) {
             return ResponseEntity

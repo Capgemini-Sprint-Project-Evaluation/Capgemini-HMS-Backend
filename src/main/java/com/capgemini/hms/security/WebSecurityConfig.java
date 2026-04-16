@@ -1,7 +1,5 @@
 package com.capgemini.hms.security;
 
-import com.capgemini.hms.security.jwt.AuthEntryPointJwt;
-import com.capgemini.hms.security.jwt.AuthTokenFilter;
 import com.capgemini.hms.security.services.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -10,32 +8,19 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 @Configuration
 public class WebSecurityConfig {
-
     @Autowired
     UserDetailsServiceImpl userDetailsService;
 
     @Autowired
-    private AuthEntryPointJwt unauthorizedHandler;
-
-    @Autowired
-    private PatientIdentityManager patientIdentityManager;
-
-    @Autowired
-    private CustomAccessDeniedHandler accessDeniedHandler;
-
-    @Bean
-    public AuthTokenFilter authenticationJwtTokenFilter() {
-        return new AuthTokenFilter();
-    }
+    private CustomAuthenticationSuccessHandler successHandler;
 
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
@@ -59,91 +44,93 @@ public class WebSecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-
         http
-                .csrf(AbstractHttpConfigurer::disable)
-                .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint(unauthorizedHandler)
-                        .accessDeniedHandler(accessDeniedHandler))
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
-                .authorizeHttpRequests(auth -> auth
-
-                        // 🔓 Public REST APIs
-                        .requestMatchers("/api/v1/auth/**").permitAll()
-                        .requestMatchers("/api/test/**").permitAll()
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-
-                        // 🔓 PUBLIC UI + STATIC FILES (🔥 YOUR STEP 3)
-                        .requestMatchers(
-                                "/",
-                                "/login",
-                                "/register",
-                                "/home",
-                                "/dashboard",
-                                "/patient/**",
-                                "/appointment/**",
-                                "/stay/**",
-                                "/physician/**",
-                                "/nurse/**",
-                                "/medication/**",
-                                "/medical-records/**",
-                                "/certification/**",
-                                "/room/**",
-                                "/department/**",
-                                "/prescription/**",
-                                "/procedure/**",
-                                "/shift/**",
-                                "/blocks/**",
-                                "/block/**",
-                                "/ui/**",
-                                "/css/**",
-                                "/js/**",
-                                "/images/**",
-                                "/favicon.ico",
-                                "/error",
-                                "/.well-known/**"
-                        ).permitAll()
-
-                        // 🔒 1. Master Data Management - ADMIN ONLY
-                        .requestMatchers("/api/v1/blocks/**", "/api/v1/rooms/**").hasRole("ADMIN")
-                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/physicians/**", "/api/v1/nurses/**").hasRole("ADMIN")
-                        .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/v1/physicians/**", "/api/v1/nurses/**").hasRole("ADMIN")
-
-                        // 🔒 2. Clinical Operations
-                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/prescriptions/**").hasAnyRole("ADMIN", "DOCTOR")
-                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/stays/**", "/api/v1/patients/**", "/api/v1/medical-records/procedure/**").hasAnyRole("ADMIN", "NURSE", "DOCTOR")
-                        .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/v1/stays/**", "/api/v1/patients/**").hasRole("ADMIN")
-                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/medical-records/**")
-                        .hasAnyRole("ADMIN", "DOCTOR", "NURSE", "PATIENT")
-
-                        // 🔒 3. Scheduling & Appointments
-                        .requestMatchers("/api/v1/appointments/my").hasRole("PATIENT")
-                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/appointments").hasAnyRole("ADMIN", "NURSE", "PATIENT")
-                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/appointments/**").hasAnyRole("ADMIN", "DOCTOR", "NURSE", "PATIENT")
-                        .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/v1/appointments/**").hasAnyRole("ADMIN", "NURSE")
-
-                        // 🔒 4. Reporting & Dashboards
-                        .requestMatchers("/api/dashboard/**").hasRole("ADMIN")
-
-                        // 🔒 5. General Read Access
-                        .requestMatchers(org.springframework.http.HttpMethod.GET,
-                                "/api/v1/medications/**",
-                                "/api/v1/procedures/**",
-                                "/api/v1/certifications/**")
-                        .hasAnyRole("ADMIN", "DOCTOR", "NURSE", "PATIENT")
-                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/certifications/**").hasRole("ADMIN")
-
-                        // 🔒 6. Patient Privacy
-                        .requestMatchers("/api/v1/patients/{ssn}/**").access(patientIdentityManager)
-
-                        // 🔒 Everything else
-                        .anyRequest().authenticated()
-                );
+            .csrf(csrf -> csrf
+                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+            )
+            .exceptionHandling(exception -> exception
+                .accessDeniedHandler(accessDeniedHandler)
+            )
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+            )
+            .authorizeHttpRequests(auth -> 
+                auth.requestMatchers("/api/v1/auth/signup").permitAll()
+                    .requestMatchers("/api/test/**").permitAll()
+                    .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                    
+                    // 🟢 VIEW ROUTES & ASSETS (Internal HMS UI)
+                    .requestMatchers(
+                            "/",
+                            "/login",
+                            "/register",
+                            "/css/**",
+                            "/js/**",
+                            "/images/**",
+                            "/vendor/**",
+                            "/webjars/**",
+                            "/blocks/**",
+                            "/rooms/**",
+                            "/stays/**",
+                            "/patients/**",
+                            "/physicians/**",
+                            "/nurses/**",
+                            "/appointments/**",
+                            "/medications/**",
+                            "/prescriptions/**",
+                            "/procedures/**",
+                            "/on-calls/**",
+                            "/medical-records/**"
+                    ).permitAll()
+                    
+                    // 1. Master Data Management - ADMIN ONLY
+                    .requestMatchers("/api/v1/blocks/**", "/api/v1/rooms/**").hasRole("ADMIN")
+                    .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/physicians/**", "/api/v1/nurses/**").hasRole("ADMIN")
+                    .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/v1/physicians/**", "/api/v1/nurses/**").hasRole("ADMIN")
+                    
+                    // 2. Clinical Operations
+                    .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/prescriptions/**").hasAnyRole("ADMIN", "DOCTOR")
+                    .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/stays/**", "/api/v1/patients/**", "/api/v1/medical-records/procedure/**").hasAnyRole("ADMIN", "NURSE", "DOCTOR")
+                    .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/medical-records/**").hasAnyRole("ADMIN", "DOCTOR", "NURSE", "PATIENT")
+                    
+                    // 3. Scheduling & Appointments
+                    .requestMatchers("/api/v1/appointments/my").hasRole("PATIENT")
+                    .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/appointments").hasAnyRole("ADMIN", "NURSE", "PATIENT")
+                    .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/appointments/**").hasAnyRole("ADMIN", "DOCTOR", "NURSE")
+                    
+                    // 4. Reporting & Dashboards
+                    .requestMatchers("/api/v1/dashboard/**").hasRole("ADMIN")
+                    
+                    // 5. General Read Access
+                    .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/medications/**", "/api/v1/procedures/**", "/api/v1/certifications/**").hasAnyRole("ADMIN", "DOCTOR", "NURSE", "PATIENT")
+                    .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/certifications/**").hasRole("ADMIN")
+                    
+                    // 6. Patient Specific Identity Protection (The "Privacy Shield")
+                    .requestMatchers("/api/v1/patients/{ssn}/**").access(patientIdentityManager)
+                    
+                    .anyRequest().authenticated()
+            )
+            .formLogin(form -> form
+                .loginPage("/login")
+                .successHandler(successHandler)
+                .permitAll()
+            )
+            .logout(logout -> logout
+                .logoutUrl("/logout")
+                .logoutSuccessUrl("/login?logout")
+                .invalidateHttpSession(true)
+                .deleteCookies("JSESSIONID", "XSRF-TOKEN")
+                .permitAll()
+            );
 
         http.authenticationProvider(authenticationProvider());
-        http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
+
+    @Autowired
+    private PatientIdentityManager patientIdentityManager;
+
+    @Autowired
+    private CustomAccessDeniedHandler accessDeniedHandler;
 }
