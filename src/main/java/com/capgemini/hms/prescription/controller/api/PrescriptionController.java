@@ -72,7 +72,8 @@ public class PrescriptionController {
     }
 
     @GetMapping("/patient/{ssn}")
-    @Operation(summary = "Get patient prescriptions", description = "Returns all medications prescribed to a specific patient")
+    @PreAuthorize("hasAnyRole('ADMIN','DOCTOR','NURSE') or (hasRole('PATIENT') and #ssn == principal.patientSsn)")
+    @Operation(summary = "Get patient prescriptions", description = "Returns all medications prescribed to a specific patient. Patients can only access their own records.")
     public ResponseEntity<ApiResponse<List<Prescription>>> getPatientPrescriptions(@PathVariable Integer ssn) {
         return ResponseEntity.ok(ApiResponse.success(prescriptionService.getPatientPrescriptions(ssn)));
     }

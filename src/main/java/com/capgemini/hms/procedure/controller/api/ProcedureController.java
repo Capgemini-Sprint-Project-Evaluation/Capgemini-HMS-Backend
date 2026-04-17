@@ -82,9 +82,12 @@ public class ProcedureController {
         return ResponseEntity.ok(ApiResponse.success(pagedResponse));
     }
 
+    @DeleteMapping("/{code}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Remove procedure", description = "Performs a safe soft-delete on a procedure record. Record remains in DB with is_deleted=true.")
     public ResponseEntity<ApiResponse<String>> deleteProcedure(@PathVariable Integer code) {
         procedureService.deleteProcedure(code);
-        return ResponseEntity.ok(ApiResponse.success("Procedure record deleted successfully"));
+        return ResponseEntity.ok(ApiResponse.success("Procedure record soft-deleted successfully"));
     }
 
     private ProcedureDTO convertToDTO(Procedure p) {

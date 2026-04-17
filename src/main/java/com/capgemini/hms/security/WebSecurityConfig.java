@@ -4,6 +4,7 @@ import com.capgemini.hms.security.services.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -15,6 +16,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 @Configuration
+@EnableMethodSecurity
 public class WebSecurityConfig {
     @Autowired
     UserDetailsServiceImpl userDetailsService;
@@ -82,7 +84,10 @@ public class WebSecurityConfig {
                             "/on-calls/**",
                             "/medical-records/**"
                     ).permitAll()
-                    
+
+                    // 🔴 ADMIN MANAGEMENT — Defence-in-depth (also enforced via @PreAuthorize on AdminController)
+                    .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
                     // 1. Master Data Management - ADMIN ONLY
                     .requestMatchers("/api/v1/blocks/**", "/api/v1/rooms/**").hasRole("ADMIN")
                     .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/physicians/**", "/api/v1/nurses/**").hasRole("ADMIN")

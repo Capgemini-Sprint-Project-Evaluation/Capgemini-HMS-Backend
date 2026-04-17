@@ -82,9 +82,12 @@ public class MedicationController {
         return ResponseEntity.ok(ApiResponse.success(pagedResponse));
     }
 
+    @DeleteMapping("/{code}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Remove medication", description = "Performs a safe soft-delete on a medication record. Record remains in DB with is_deleted=true.")
     public ResponseEntity<ApiResponse<String>> deleteMedication(@PathVariable Integer code) {
         medicationService.deleteMedication(code);
-        return ResponseEntity.ok(ApiResponse.success("Medication record deleted successfully"));
+        return ResponseEntity.ok(ApiResponse.success("Medication record soft-deleted successfully"));
     }
 
     private MedicationDTO convertToDTO(Medication m) {

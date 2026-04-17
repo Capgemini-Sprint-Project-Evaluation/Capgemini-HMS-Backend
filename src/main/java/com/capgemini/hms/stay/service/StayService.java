@@ -105,6 +105,15 @@ public class StayService {
     public void deleteStay(Integer id) {
         Stay stay = stayRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Stay record not found"));
+
+        // Safe soft-delete: release the room ONLY if the stay was still active
+        // (stayEnd null = patient was not yet checked out before deletion)
+        if (stay.getStayEnd() == null && stay.getRoom() != null) {
+            Room room = stay.getRoom();
+            room.setUnavailable(false);
+            roomRepository.save(room);
+        }
+
         stay.setIsDeleted(true);
         stayRepository.save(stay);
     }

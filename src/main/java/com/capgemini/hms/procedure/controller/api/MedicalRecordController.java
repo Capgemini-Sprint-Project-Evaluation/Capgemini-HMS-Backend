@@ -5,7 +5,7 @@ import com.capgemini.hms.procedure.entity.Undergoes;
 import com.capgemini.hms.procedure.service.MedicalRecordService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -51,7 +51,8 @@ public class MedicalRecordController {
     }
 
     @GetMapping("/patient/{ssn}")
-    @Operation(summary = "Get patient medical history", description = "Returns a chronological list of all procedures undergone by a patient")
+    @PreAuthorize("hasAnyRole('ADMIN','DOCTOR','NURSE') or (hasRole('PATIENT') and #ssn == principal.patientSsn)")
+    @Operation(summary = "Get patient medical history", description = "Returns a chronological list of all procedures undergone by a patient. Patients can only access their own history.")
     public ResponseEntity<ApiResponse<List<Undergoes>>> getPatientHistory(@PathVariable Integer ssn) {
         return ResponseEntity.ok(ApiResponse.success(medicalRecordService.getPatientMedicalHistory(ssn)));
     }
