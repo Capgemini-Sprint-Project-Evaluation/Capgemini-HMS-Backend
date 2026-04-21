@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title}">Test API</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0070ad;
+            --dark: #09121d;
+            --light: #f4f7f9;
+            --white: #ffffff;
+            --border: #e2e8f0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Outfit', sans-serif; background: var(--light); color: var(--dark); }
+        .back-nav { margin: 32px auto 0; max-width: 1100px; padding: 0 20px; }
+        .back-link { color: var(--primary); text-decoration: none; font-weight: 700; }
+        .container { max-width: 1100px; margin: 24px auto 40px; padding: 0 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+        .card { background: var(--white); border-radius: 20px; padding: 32px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .card-title { font-size: 1.45rem; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .method-label { background: #49cc90; color: white; padding: 4px 12px; border-radius: 8px; font-size: 0.82rem; }
+        .path-label { font-family: monospace; font-size: 0.92rem; background: #f0f2f5; padding: 6px 10px; border-radius: 8px; margin-top: 18px; display: inline-block; }
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 7px; }
+        .form-group input, .form-group select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px; font: inherit; }
+        .btn-test { background: var(--primary); color: white; width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 10px; }
+        .response-area { background: #0f172a; color: #bae6fd; padding: 24px; border-radius: 14px; font-family: monospace; font-size: 0.9rem; white-space: pre-wrap; min-height: 420px; overflow-y: auto; }
+        .status-badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-weight: 800; font-size: 0.8rem; margin-bottom: 14px; }
+        .status-success { background: #065f46; color: #34d399; }
+        .status-error { background: #7f1d1d; color: #fca5a5; }
+        .info-panel { margin-top: 28px; border-top: 1px solid var(--border); padding-top: 18px; }
+        .info-item { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 10px; font-size: 0.94rem; }
+        .info-label { color: #64748b; font-weight: 700; }
+        @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<div class="back-nav">
+    <a th:href="@{'/member/' + ${developer.id}}" class="back-link">&lt; Back to Developer Domain</a>
+</div>
+
+<div class="container">
+    <div class="card">
+        <div class="card-title">
+            <span class="method-label" th:text="${endpoint.method}">POST</span>
+            <span th:text="${endpoint.name}">Endpoint Name</span>
+        </div>
+        <p style="color: #64748b;" th:text="${endpoint.description}">Description</p>
+        <div class="path-label" th:text="${endpoint.path}">/api/v1/path</div>
+
+        <form id="apiForm" style="margin-top: 28px;">
+            <input type="hidden" name="id" th:value="${endpoint.id}">
+            <input type="hidden" name="method" th:value="${endpoint.method}">
+            <input type="hidden" name="path" th:value="${endpoint.path}">
+
+            <div th:each="field : ${endpoint.fields}" class="form-group">
+                <label th:text="${#strings.capitalize(field.key)}">Field</label>
+                <input th:if="${field.value == 'string'}" type="text" th:name="${field.key}">
+                <input th:if="${field.value == 'number'}" type="number" th:name="${field.key}">
+                <input th:if="${field.value == 'password'}" type="password" th:name="${field.key}">
+                <input th:if="${field.value == 'datetime'}" type="datetime-local" th:name="${field.key}">
+                <select th:if="${field.value == 'boolean'}" th:name="${field.key}">
+                    <option value="true">true</option>
+                    <option value="false">false</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn-test">Execute API Call</button>
+        </form>
+
+        <div class="info-panel">
+            <div class="info-item">
+                <span class="info-label">Access Level</span>
+                <span th:text="${endpoint.access}">Authenticated</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Developer</span>
+                <span th:text="${developer.name}">Developer Name</span>
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <div id="statusContainer" style="display: none;">
+            <span id="statusCode" class="status-badge status-success">200 OK</span>
+        </div>
+        <div id="responseArea" class="response-area">// Awaiting execution...
+// Click "Execute API Call" to test this endpoint.</div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    let csrfTokenValue = null;
+
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) {
+            return parts.pop().split(';').shift();
+        }
+        return null;
+    }
+
+    async function ensureCsrfToken() {
+        const response = await fetch('/api/proxy/csrf', {
+            method: 'GET',
+            credentials: 'same-origin'
+        });
+
+        const payload = await response.json();
+        csrfTokenValue = payload?.data ?? null;
+    }
+
+    document.getElementById('apiForm').addEventListener('submit', async function (event) {
+        event.preventDefault();
+        await ensureCsrfToken();
+
+        const formData = new FormData(this);
+        const payload = {};
+        formData.forEach((value, key) => {
+            if (value !== '') {
+                payload[key] = value;
+            }
+        });
+
+        const responseArea = document.getElementById('responseArea');
+        const statusContainer = document.getElementById('statusContainer');
+        const statusCode = document.getElementById('statusCode');
+        responseArea.textContent = '// Requesting...';
+        statusContainer.style.display = 'none';
+
+        try {
+            const response = await fetch('/api/proxy', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(csrfTokenValue ? { 'X-XSRF-TOKEN': csrfTokenValue } : {})
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const statusText = response.status + ' ' + response.statusText;
+            statusCode.textContent = statusText;
+            statusCode.className = 'status-badge ' + (response.ok ? 'status-success' : 'status-error');
+            statusContainer.style.display = 'block';
+
+            const text = await response.text();
+            if (!text) {
+                responseArea.textContent = '{}';
+                return;
+            }
+
+            let result;
+            try {
+                result = JSON.parse(text);
+                responseArea.textContent = JSON.stringify(result, null, 4);
+
+                // If it's a validation error, we could do more here, but showing the formatted JSON is a huge improvement
+                // We'll also check if it's one of our ERROR status responses
+                if (result.status === 'ERROR' && result.errors) {
+                    let errorList = "\n\n--- VALIDATION ERRORS ---\n";
+                    for (const [field, msg] of Object.entries(result.errors)) {
+                        errorList += `• ${field}: ${msg}\n`;
+                    }
+                    responseArea.textContent += errorList;
+                }
+            } catch (parseError) {
+                responseArea.textContent = text;
+            }
+        } catch (error) {
+            statusContainer.style.display = 'block';
+            statusCode.textContent = 'NETWORK ERROR';
+            statusCode.className = 'status-badge status-error';
+            responseArea.textContent = JSON.stringify({ 
+                status: 'ERROR', 
+                message: 'Failed to communicate with the proxy. Ensure the frontend server is running.',
+                detail: error.message 
+            }, null, 4);
+        }
+    });
+
+    ensureCsrfToken();
+</script>
+</body>
+</html>
