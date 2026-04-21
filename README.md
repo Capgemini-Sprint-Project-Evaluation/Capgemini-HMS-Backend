@@ -1,576 +1,633 @@
-# Capgemini HMS Backend
+# HMS (Hospital Management System)
 
-A **Spring Boot Monolith** for the **Capgemini Training Evaluation Exceller 2026** sprint project.
-
-This project is a **Hospital Management System (HMS)** designed to manage hospital operations such as patient records, physician details, appointments, prescriptions, room stays, nurse assignments, procedures, and department affiliations using a structured relational database.
-
----
-
-## Project Overview
-
-The goal of this application is to provide a clean, maintainable, and scalable backend for hospital workflows in a **single Spring Boot monolith**. The system is designed around the provided database schema and follows a layered architecture with clear separation of concerns.
-
-The application will support:
-
-* Patient management
-* Physician and department management
-* Appointment scheduling
-* Medication and prescription tracking
-* Room and stay management
-* Procedure and treatment records
-* Nurse and on-call tracking
-* Secure API design with future-ready structure
+A decentralized Hospital Management System built as a Developer Showcase and API Demonstration Tool.
+This project is designed to highlight backend API design, frontend integration, security practices, testing discipline, and code quality engineering in a distributed setup.
 
 ---
 
-## Why Monolith Architecture
+## 📌 Project Overview
 
-This project is intentionally designed as a **monolith** because:
+HMS is not intended to be a production-ready hospital user interface. Instead, it is a technical showcase project that demonstrates how a hospital domain can be modeled and exposed through a secure, testable, and maintainable distributed application.
 
-* It is easier to build and deliver within the evaluation timeline
-* It reduces deployment and debugging complexity
-* It is ideal for a 14-day sprint project
-* It keeps all modules in one codebase while still maintaining modular package structure
+The system is intentionally split into independent components:
 
-The codebase is organized as a **modular monolith**, meaning each domain has its own package and responsibilities, but everything is deployed as one application.
+- Frontend: Thymeleaf-based developer-facing UI
+- Backend: Spring Boot REST API
+- Database: Configurable relational database layer
 
----
+This decentralized approach allows the application to run across multiple machines, making it useful for:
 
-## Database-Driven Domain Model
+- API demonstrations
+- developer onboarding
+- architecture discussions
+- distributed deployment testing
+- endpoint ownership showcase by team members
 
-The project is based on the following major database entities from the shared HMS schema:
+### Why this project exists
 
-* `Physician`
-* `Department`
-* `Affiliated_With`
-* `Procedures`
-* `Trained_In`
-* `Patient`
-* `Nurse`
-* `Appointment`
-* `Medication`
-* `Prescribes`
-* `Block`
-* `Room`
-* `On_Call`
-* `Stay`
-* `Undergoes`
+HMS was built to demonstrate:
 
-These tables represent the core hospital workflow and will be mapped into Spring Boot entities, repositories, services, DTOs, and controllers.
+- clean layered backend architecture
+- secure session-based authentication
+- interactive endpoint exploration
+- developer-to-endpoint ownership mapping
+- maintainable code with SonarQube-driven improvements
+- integration between independently deployable frontend and backend services
 
 ---
 
-## Suggested Folder Structure
-
-Below is the recommended **end-to-end professional folder structure** for the monolith.
-
-```bash
-capgemini-hms-backend/
-├── README.md
-├── pom.xml
-├── .gitignore
-├── docker-compose.yml
-├── Dockerfile
-├── src
-│   ├── main
-│   │   ├── java
-│   │   │   └── com
-│   │   │       └── capgemini
-│   │   │           └── hms
-│   │   │               ├── CapgeminiHmsBackendApplication.java
-│   │   │               │
-│   │   │               ├── config
-│   │   │               │   ├── SwaggerConfig.java
-│   │   │               │   ├── JpaConfig.java
-│   │   │               │   └── WebConfig.java
-│   │   │               │
-│   │   │               ├── security
-│   │   │               │   ├── JwtAuthenticationFilter.java
-│   │   │               │   ├── JwtService.java
-│   │   │               │   ├── SecurityConfig.java
-│   │   │               │   └── CustomUserDetailsService.java
-│   │   │               │
-│   │   │               ├── exception
-│   │   │               │   ├── GlobalExceptionHandler.java
-│   │   │               │   ├── ResourceNotFoundException.java
-│   │   │               │   ├── DuplicateResourceException.java
-│   │   │               │   └── BadRequestException.java
-│   │   │               │
-│   │   │               ├── common
-│   │   │               │   ├── constants
-│   │   │               │   ├── enums
-│   │   │               │   ├── response
-│   │   │               │   └── util
-│   │   │               │
-│   │   │               ├── auth
-│   │   │               │   ├── controller
-│   │   │               │   ├── dto
-│   │   │               │   ├── service
-│   │   │               │   ├── serviceImpl
-│   │   │               │   └── model
-│   │   │               │
-│   │   │               ├── physician
-│   │   │               │   ├── controller
-│   │   │               │   ├── dto
-│   │   │               │   ├── entity
-│   │   │               │   ├── repository
-│   │   │               │   ├── service
-│   │   │               │   ├── serviceImpl
-│   │   │               │   └── mapper
-│   │   │               │
-│   │   │               ├── department
-│   │   │               │   ├── controller
-│   │   │               │   ├── dto
-│   │   │               │   ├── entity
-│   │   │               │   ├── repository
-│   │   │               │   ├── service
-│   │   │               │   ├── serviceImpl
-│   │   │               │   └── mapper
-│   │   │               │
-│   │   │               ├── patient
-│   │   │               │   ├── controller
-│   │   │               │   ├── dto
-│   │   │               │   ├── entity
-│   │   │               │   ├── repository
-│   │   │               │   ├── service
-│   │   │               │   ├── serviceImpl
-│   │   │               │   └── mapper
-│   │   │               │
-│   │   │               ├── nurse
-│   │   │               │   ├── controller
-│   │   │               │   ├── dto
-│   │   │               │   ├── entity
-│   │   │               │   ├── repository
-│   │   │               │   ├── service
-│   │   │               │   ├── serviceImpl
-│   │   │               │   └── mapper
-│   │   │               │
-│   │   │               ├── appointment
-│   │   │               │   ├── controller
-│   │   │               │   ├── dto
-│   │   │               │   ├── entity
-│   │   │               │   ├── repository
-│   │   │               │   ├── service
-│   │   │               │   ├── serviceImpl
-│   │   │               │   └── mapper
-│   │   │               │
-│   │   │               ├── medication
-│   │   │               │   ├── controller
-│   │   │               │   ├── dto
-│   │   │               │   ├── entity
-│   │   │               │   ├── repository
-│   │   │               │   ├── service
-│   │   │               │   ├── serviceImpl
-│   │   │               │   └── mapper
-│   │   │               │
-│   │   │               ├── procedure
-│   │   │               │   ├── controller
-│   │   │               │   ├── dto
-│   │   │               │   ├── entity
-│   │   │               │   ├── repository
-│   │   │               │   ├── service
-│   │   │               │   ├── serviceImpl
-│   │   │               │   └── mapper
-│   │   │               │
-│   │   │               ├── room
-│   │   │               │   ├── controller
-│   │   │               │   ├── dto
-│   │   │               │   ├── entity
-│   │   │               │   ├── repository
-│   │   │               │   ├── service
-│   │   │               │   ├── serviceImpl
-│   │   │               │   └── mapper
-│   │   │               │
-│   │   │               ├── stay
-│   │   │               │   ├── controller
-│   │   │               │   ├── dto
-│   │   │               │   ├── entity
-│   │   │               │   ├── repository
-│   │   │               │   ├── service
-│   │   │               │   ├── serviceImpl
-│   │   │               │   └── mapper
-│   │   │               │
-│   │   │               ├── prescription
-│   │   │               │   ├── controller
-│   │   │               │   ├── dto
-│   │   │               │   ├── entity
-│   │   │               │   ├── repository
-│   │   │               │   ├── service
-│   │   │               │   ├── serviceImpl
-│   │   │               │   └── mapper
-│   │   │               │
-│   │   │               └── oncall
-│   │   │                   ├── controller
-│   │   │                   ├── dto
-│   │   │                   ├── entity
-│   │   │                   ├── repository
-│   │   │                   ├── service
-│   │   │                   ├── serviceImpl
-│   │   │                   └── mapper
-│   │   │
-│   │   └── resources
-│   │       ├── application.properties
-│   │       ├── application-dev.properties
-│   │       ├── application-prod.properties
-│   │       ├── db
-│   │       │   ├── schema.sql
-│   │       │   └── data.sql
-│   │       ├── static
-│   │       └── templates
-│   │
-│   └── test
-│       └── java
-│           └── com
-│               └── capgemini
-│                   └── hms
-│                       ├── physician
-│                       ├── patient
-│                       ├── appointment
-│                       └── ...
-```
-
----
-
-## Package Responsibility
-
-### `config`
-
-Contains framework-level configuration like Swagger, JPA, CORS, and application setup.
-
-### `security`
-
-Contains JWT-based authentication and authorization setup.
-
-### `exception`
-
-Contains custom exceptions and a global exception handler for clean API responses.
-
-### `common`
-
-Contains shared utilities, constants, enums, and response wrappers used across all modules.
-
-### Domain Packages
-
-Each domain package represents one business area of the HMS and follows the same internal structure:
-
-* `controller` → REST endpoints
-* `dto` → request/response objects
-* `entity` → JPA entity classes
-* `repository` → database access layer
-* `service` → business interface
-* `serviceImpl` → business logic implementation
-* `mapper` → DTO/entity conversion
-
----
-
-## Domain Mapping Based on Schema
-
-### 1. Physician Module
-
-Handles:
-
-* Physician registration and management
-* Doctor profiles
-* Specialization and position tracking
-* Head of department references
-
-Maps to:
-
-* `Physician`
-* `Affiliated_With`
-* `Trained_In`
-
-### 2. Department Module
-
-Handles:
-
-* Department creation
-* Department head assignment
-* Department-wise physician mapping
-
-Maps to:
-
-* `Department`
-* `Affiliated_With`
-
-### 3. Patient Module
-
-Handles:
-
-* Patient registration
-* Personal details
-* PCP assignment
-
-Maps to:
-
-* `Patient`
-
-### 4. Nurse Module
-
-Handles:
-
-* Nurse records
-* Registration status
-* Nurse workforce management
-
-Maps to:
-
-* `Nurse`
-* `On_Call`
-
-### 5. Appointment Module
-
-Handles:
-
-* Patient appointments
-* Prep nurse assignment
-* Physician assignment
-* Appointment timing and room details
-
-Maps to:
-
-* `Appointment`
-
-### 6. Medication Module
-
-Handles:
-
-* Medicine catalog
-* Brand and description details
-* Prescription linkage
-
-Maps to:
-
-* `Medication`
-
-### 7. Prescription Module
-
-Handles:
-
-* Which physician prescribed which medication
-* Patient-medication relation
-* Dose and prescription date
-
-Maps to:
-
-* `Prescribes`
-
-### 8. Procedure Module
-
-Handles:
-
-* Hospital procedures
-* Procedure cost and name
-* Training and treatment mapping
-
-Maps to:
-
-* `Procedures`
-* `Trained_In`
-
-### 9. Room Module
-
-Handles:
-
-* Room details
-* Room type
-* Availability
-* Block mapping
-
-Maps to:
-
-* `Room`
-* `Block`
-
-### 10. Stay Module
-
-Handles:
-
-* Patient admission
-* Room stay duration
-* Admission and discharge tracking
-
-Maps to:
-
-* `Stay`
-
-### 11. On-Call Module
-
-Handles:
-
-* Nurse on-call schedule
-* Block assignment
-* Start/end duty timings
-
-Maps to:
-
-* `On_Call`
-
-### 12. Undergoes Module
-
-Handles:
-
-* Procedure performed during a patient stay
-* Physician and assisting nurse details
-
-Maps to:
-
-* `Undergoes`
-
----
-
-## Suggested API Layer Flow
+## 🏗️ Architecture Diagram
 
 ```text
-Controller → Service → Repository → Database
++-----------------------+        HTTP / Session / CSRF        +-----------------------+        JDBC / JPA        +----------------------+
+| Frontend (Laptop A)   |  --------------------------------> | Backend (Laptop B)    |  --------------------> | Database (Laptop C)  |
+| Thymeleaf UI          |                                     | Spring Boot API       |                        | MySQL / PostgreSQL   |
+| API Testing Console   | <---------------------------------  | Business Logic        | <--------------------  | Persistent Storage   |
++-----------------------+        JSON / HTML / Errors         +-----------------------+        Queries          +----------------------+
 ```
 
-### Example Flow
+### Communication Flow
 
-1. Client sends request to controller
-2. Controller validates and forwards to service
-3. Service applies business logic
-4. Repository handles database interaction
-5. Response is returned in a standard format
+1. A user accesses the frontend application from a browser.
+2. The frontend renders a developer showcase UI and endpoint explorer using Thymeleaf.
+3. When the user triggers an API action, the frontend proxies the request to the backend service over HTTP.
+4. The backend handles:
+   - authentication
+   - authorization
+   - validation
+   - business logic
+   - persistence
+5. The backend communicates with the database using Spring Data JPA / Hibernate.
+6. The response is returned to the frontend and displayed in the interactive API testing interface.
 
 ---
 
-## Standard Response Structure
+## ⚙️ Tech Stack
 
-All APIs should ideally return a consistent response format such as:
+### Backend
 
-```json
-{
-  "success": true,
-  "message": "Patient created successfully",
-  "data": {}
-}
+- Java 17
+- Spring Boot 3.2.5
+- Spring Web
+- Spring Security
+- Spring Data JPA
+- Hibernate
+- Bean Validation
+
+### Frontend
+
+- Thymeleaf
+- Spring Boot MVC
+- HTML/CSS/JavaScript
+- RestClient for backend communication
+
+### Database
+
+- MySQL
+- PostgreSQL
+- Configurable via application properties
+
+### Testing
+
+- JUnit 5
+- Mockito
+- Spring Test
+
+### Code Quality
+
+- SonarQube
+- JaCoCo coverage reports
+
+### Build Tool
+
+- Maven
+
+---
+
+## 🔐 Security Implementation
+
+Security in HMS is designed for a server-rendered, session-oriented distributed system.
+
+### Implemented Security Features
+
+- Session-based authentication
+- HttpOnly cookie-based session storage
+- Role-based authorization
+- CSRF protection
+- Password hashing with BCrypt
+- No hardcoded credentials
+- Server-side access control
+
+### Authentication Model
+
+After login:
+
+- the backend creates a session
+- the browser stores the session identifier in an HttpOnly cookie
+- subsequent requests automatically carry the authenticated session
+- protected endpoints are authorized based on assigned roles
+
+### Authorization Model
+
+The system supports role-based access control such as:
+
+- Admin
+- User / domain roles depending on endpoint scope
+
+This allows the backend to restrict administrative and management operations while still exposing safe endpoints for demonstration and testing.
+
+### CSRF Protection
+
+Because HMS uses session cookies, CSRF protection is required and is enabled.
+The frontend retrieves and forwards the CSRF token when sending state-changing requests.
+
+### Why JWT is NOT used here
+
+JWT is intentionally avoided in this project because:
+
+- this is a server-rendered application
+- session-based auth is simpler and safer for this architecture
+- session invalidation is easier to control
+- the system is focused on backend governance and API demonstration, not stateless public API federation
+
+For this use case, server-managed sessions + HttpOnly cookies provide a more appropriate and controlled model.
+
+---
+
+## 📂 Project Structure
+
+## Backend Structure
+
+```text
+hms-backend/
+└── src/main/java/com/capgemini/hms/
+    ├── auth/
+    ├── clinical/
+    ├── common/
+    ├── exception/
+    ├── infrastructure/
+    ├── nursing/
+    ├── patient/
+    ├── scheduling/
+    └── security/
 ```
 
-This makes the backend cleaner and easier to consume by frontend or testing tools.
+### Layer Responsibilities
+
+- controller
+  - defines REST endpoints
+  - handles request/response orchestration
+  - delegates business logic to services
+
+- service
+  - contains business logic
+  - performs validation and workflow coordination
+  - maps entities and DTOs where appropriate
+
+- repository
+  - data access layer
+  - powered by Spring Data JPA
+
+- dto
+  - request/response transfer objects
+  - used to keep API contracts stable and explicit
+
+- entity
+  - domain persistence models
+  - mapped with JPA/Hibernate annotations
+
+- config
+  - security configuration
+  - bean definitions
+  - initialization and environment-driven setup
+
+- exception
+  - centralized exception model
+  - global exception handling
+  - consistent API error responses
+
+## Frontend Structure
+
+```text
+hms-frontend/
+└── src/main/java/com/capgemini/hms/
+    ├── config/
+    ├── controller/
+    ├── model/
+    └── service/
+
+hms-frontend/src/main/resources/
+    ├── templates/
+    └── application.properties
+```
+
+### Frontend Responsibilities
+
+- render developer-facing pages
+- display team/member endpoint ownership
+- build dynamic request forms
+- proxy API requests to backend
+- render structured API responses and errors
 
 ---
 
-## Recommended Development Approach
+## 🚀 Features
 
-### Phase 1: Base Setup
+### Core Features
 
-* Create Spring Boot project
-* Configure database connection
-* Add dependencies
-* Setup Swagger and global exception handling
+- Developer showcase landing page
+- Member-wise endpoint mapping
+- Interactive endpoint exploration
+- Dynamic API testing UI
+- Form-based request builder
+- Real-time API response display
+- Validation handling
+- Consistent error handling
+- Role-protected backend APIs
+- Distributed deployment support
 
-### Phase 2: Core Modules
+### Functional Highlights
 
-* Patient
-* Physician
-* Department
-* Appointment
-* Nurse
-
-### Phase 3: Supporting Modules
-
-* Medication
-* Prescription
-* Room
-* Stay
-* Procedure
-* On-call
-* Undergoes
-
-### Phase 4: Finalization
-
-* Validation
-* Logging
-* Error handling
-* Testing
-* Deployment
+- browse available endpoints by developer/member
+- inspect request fields and endpoint metadata
+- execute requests directly from the UI
+- view structured success/error responses instantly
+- demonstrate backend flows without Postman or Swagger dependency
 
 ---
 
-## Team Collaboration Plan
+## 🔌 API Documentation System
 
-Since this is a group project, use a clean GitHub workflow:
+HMS includes a lightweight documentation and ownership model tailored for team demonstrations.
 
-* `main` → stable final code
-* `develop` → active integration branch
-* `feature/<module-name>` → individual task branches
+### How it works
 
-Example feature branches:
+Endpoints are associated with developers/members so that the frontend can show:
 
-* `feature/patient-module`
-* `feature/physician-module`
-* `feature/appointment-module`
-* `feature/room-module`
-* `feature/prescription-module`
+- which developer owns which endpoint
+- what each endpoint does
+- how to test it
+- what input is required
 
-Each team member should work on one feature branch and create a Pull Request into `develop`.
+### Mapping Strategy
 
----
+The system supports config-driven / CSV-style endpoint ownership mapping, making it easy to maintain:
 
-## Branch Protection Recommendation
+- developer name
+- endpoint path
+- HTTP method
+- feature/domain
+- description
 
-For the `main` branch:
+This turns the frontend into a developer showcase dashboard, not just a UI layer.
 
-* Require pull request before merge
-* Require at least 1 approval
-* Restrict direct pushes
-* Optionally require passing checks before merge
+### Interactive Testing UI
 
-This ensures no one commits directly to production-ready code.
+The frontend provides an embedded testing experience:
 
----
+- select an endpoint
+- view its metadata
+- fill form inputs
+- send request to backend
+- inspect JSON/error response in real time
 
-## Tech Stack
+This makes HMS useful as both:
 
-* **Java 17+**
-* **Spring Boot**
-* **Spring Web**
-* **Spring Data JPA**
-* **Spring Security**
-* **MySQL**
-* **Lombok**
-* **Maven**
-* **Swagger / OpenAPI**
-* **Docker** for deployment
+- a demo platform
+- an internal API discovery tool
 
 ---
 
-## Suggested Naming Convention
+## 🧪 Testing
 
-To keep the project professional, use consistent naming rules:
+Testing is a core part of the project and was expanded to improve reliability and coverage.
 
-* Package name: `com.capgemini.hms`
-* Entity names: singular form
-* Repository names: `EntityRepository`
-* Service names: `EntityService`
-* Controller names: `EntityController`
-* DTO names: `EntityRequestDto`, `EntityResponseDto`
+### Test Stack
+
+- JUnit 5
+- Mockito
+- Spring Test
+- MockMvc / service-layer mocks where applicable
+
+### What is tested
+
+- service layer business logic
+- controller behavior
+- exception handling
+- security-sensitive flows
+- frontend proxy/service behavior
+- configuration classes
+- initialization flows
+
+### Coverage Focus
+
+Coverage was intentionally improved in areas such as:
+
+- service-layer branching logic
+- exception paths
+- authentication-related initialization
+- frontend proxy request handling
+- edge cases and error flows
+
+This ensures the application remains stable while refactors and quality improvements are introduced.
 
 ---
 
-## Notes for the Team
+## 📊 Code Quality
 
-* Keep the schema-driven development approach
-* Follow the exact column names carefully while mapping entities
-* Do not overcomplicate with microservices
-* Build reusable code for validation and exception handling
-* Keep APIs clean and easy to test in Postman or Swagger
+HMS uses SonarQube as part of its code quality process.
+
+### Quality Improvements Completed
+
+- removed hardcoded credentials
+- improved security configuration
+- centralized repeated error messages
+- modernized Java stream usage
+- reduced duplicate literals
+- cleaned imports and minor smells
+- strengthened exception handling consistency
+- improved test coverage significantly
+
+### Quality Goals
+
+- high maintainability
+- low duplication
+- strong security posture
+- safe refactoring without changing business contracts
 
 ---
 
-## Project Goal
+## 🛠️ Setup Instructions
 
-The final goal is to deliver a well-structured, production-style **Hospital Management System backend** that demonstrates:
+## A. Backend Setup
 
-* Good architecture
-* Team collaboration
-* Clean coding standards
-* Real-world Spring Boot practices
-* Strong database understanding
+### 1. Clone the repository
+
+```bash
+git clone <your-repository-url>
+cd HMS
+```
+
+### 2. Configure the backend database connection
+
+Update backend configuration in:
+
+```properties
+hms-backend/src/main/resources/application.properties
+```
+
+Example for MySQL:
+
+```properties
+spring.datasource.url=jdbc:mysql://localhost:3306/hms_db
+spring.datasource.username=root
+spring.datasource.password=your_password
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
+```
+
+Example for PostgreSQL:
+
+```properties
+spring.datasource.url=jdbc:postgresql://localhost:5432/hms_db
+spring.datasource.username=postgres
+spring.datasource.password=your_password
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+```
+
+### 3. Configure admin credentials
+
+```properties
+admin.username=${ADMIN_USERNAME}
+admin.password=${ADMIN_PASSWORD}
+admin.email=admin@local.test
+```
+
+For local development, environment variables are recommended.
+
+### 4. Run the backend
+
+```bash
+cd hms-backend
+mvn spring-boot:run
+```
+
+Default backend URL:
+
+```text
+http://localhost:8080
+```
 
 ---
 
-## License
+## B. Frontend Setup
 
-This project is developed for **Capgemini Training Evaluation Exceller 2026** and is intended for academic and evaluation purposes.
+The frontend can run on a different machine or different port.
+
+### 1. Configure backend base URL
+
+Update frontend configuration to point to the backend host:
+
+```properties
+hms.backend.url=http://localhost:8080
+```
+
+If running on another machine:
+
+```properties
+hms.backend.url=http://192.168.x.x:8080
+```
+
+### 2. Run the frontend
+
+```bash
+cd hms-frontend
+mvn spring-boot:run
+```
+
+Example frontend URL:
+
+```text
+http://localhost:8081
+```
+
+---
+
+## C. Database Setup
+
+You can use either MySQL or PostgreSQL.
+
+### Requirements
+
+- create a database
+- configure JDBC URL, username, password, and dialect
+- ensure the backend machine can reach the database host
+
+Example database creation:
+
+```sql
+CREATE DATABASE hms_db;
+```
+
+---
+
+## 🌐 Running in Decentralized Mode
+
+HMS is designed to work across separate machines.
+
+### Example Deployment
+
+- Frontend: `http://192.168.1.10:8081`
+- Backend: `http://192.168.1.20:8080`
+- Database: `192.168.1.30:3306`
+
+### Example frontend configuration
+
+```properties
+hms.backend.url=http://192.168.1.20:8080
+```
+
+### Example backend database configuration
+
+```properties
+spring.datasource.url=jdbc:mysql://192.168.1.30:3306/hms_db
+```
+
+### Notes
+
+- ensure machines can communicate over the network
+- open required ports in firewall/security group settings
+- use reachable IP addresses or hostnames
+- configure CORS/backend security as needed for deployment topology
+
+---
+
+## 🔑 Authentication Flow
+
+HMS uses session-based authentication.
+
+### Flow
+
+1. User submits login credentials.
+2. Backend validates credentials.
+3. Backend creates an authenticated session.
+4. Session ID is stored in an HttpOnly cookie.
+5. Browser automatically includes the cookie in future requests.
+6. Frontend proxy forwards the request context to backend.
+7. Protected APIs execute if the session and role checks succeed.
+
+### Request Lifecycle
+
+```text
+Login Request
+   ↓
+Backend Authentication
+   ↓
+Session Created
+   ↓
+HttpOnly Cookie Stored in Browser
+   ↓
+Subsequent API Calls Carry Session Automatically
+   ↓
+Backend Authorizes Request
+```
+
+This model keeps credentials out of client-side JavaScript and aligns well with a server-rendered UI.
+
+---
+
+## 📸 Screenshots
+
+> Replace these placeholders with actual screenshots from your project.
+
+### Landing Page
+
+```text
+[ Screenshot Placeholder - Landing Page ]
+```
+
+### Member Page
+
+```text
+[ Screenshot Placeholder - Member Endpoint Mapping Page ]
+```
+
+### Endpoint Detail Page
+
+```text
+[ Screenshot Placeholder - Endpoint Detail / Documentation Page ]
+```
+
+### API Testing Form
+
+```text
+[ Screenshot Placeholder - Interactive API Testing UI ]
+```
+
+---
+
+## 📈 Future Improvements
+
+Planned or recommended enhancements:
+
+- Dockerization
+  - containerize frontend, backend, and database
+- CI/CD pipeline
+  - automated build, test, quality gate, and deployment
+- API Gateway
+  - centralized routing and cross-cutting concerns
+- Monitoring
+  - Prometheus
+  - Grafana
+  - Zipkin / distributed tracing
+- Environment profiles
+  - dedicated dev, test, staging, and production config sets
+- Enhanced documentation
+  - OpenAPI/Swagger for raw REST contract export
+- Observability
+  - structured logging and request tracing
+
+---
+
+## 👨‍💻 Team
+
+This project is structured as a 6-developer showcase, where endpoint ownership and contribution visibility are part of the frontend experience.
+
+### Example Team Layout
+
+- Developer 1 — Authentication & Security
+- Developer 2 — Patient Module
+- Developer 3 — Scheduling Module
+- Developer 4 — Nursing Module
+- Developer 5 — Clinical / Infrastructure Module
+- Developer 6 — Frontend Integration & API Showcase UI
+
+> Replace these placeholders with actual developer names and responsibilities.
+
+---
+
+## 📜 License
+
+This project is currently provided for educational, demonstration, and portfolio purposes.
+
+You may choose to add a formal open-source license such as:
+
+- MIT License
+- Apache License 2.0
+- GPLv3
+
+Example:
+
+```text
+Copyright (c) 2026
+Licensed under the MIT License.
+```
+
+---
+
+## Final Notes
+
+HMS demonstrates that a hospital domain can be modeled as a secure, testable, decentralized Java system while also serving as a developer portfolio artifact and interactive API demonstration platform.
+
+It is best understood not as a hospital-facing product, but as a technical showcase of distributed architecture, Spring Boot engineering, secure session management, and maintainable API design.
