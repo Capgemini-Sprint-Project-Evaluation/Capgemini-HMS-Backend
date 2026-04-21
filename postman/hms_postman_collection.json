@@ -1,0 +1,90 @@
+{
+	"info": {
+		"_postman_id": "89b32996-2ef0-4333-9c3d-cfaa209ff16c",
+		"name": "HMS Decentralized API (v1) - REBUILT",
+		"description": "Production-grade collection for the distributed Hospital Management System. Supports Session-based authentication and 6-domain architectural separation.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. AKASH: Auth & Systems",
+			"item": [
+				{
+					"name": "Sign-in (Session Login)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": "{{baseUrl}}/api/v1/auth/signin"
+					}
+				},
+				{
+					"name": "Sign-up (Register)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"dr_rahul\",\n  \"email\": \"rahul@hms.com\",\n  \"password\": \"password123\",\n  \"role\": [\"doctor\"]\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": "{{baseUrl}}/api/v1/auth/signup"
+					}
+				},
+				{
+					"name": "Admin: Dashboard Summary",
+					"request": {
+						"method": "GET",
+						"url": "{{baseUrl}}/api/v1/admin/dashboard/summary"
+					}
+				}
+			]
+		},
+		{
+			"name": "2. RAHUL: Scheduling",
+			"item": [
+				{ "name": "List Physicians", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/scheduling/physicians" } },
+				{ "name": "Book Appointment", "request": { "method": "POST", "body": { "mode": "raw", "raw": "{\n  \"appointmentId\": 1,\n  \"patientSsn\": 1001,\n  \"physicianId\": 101,\n  \"start\": \"2026-04-20T10:00:00\",\n  \"end\": \"2026-04-20T11:00:00\",\n  \"examinationRoom\": \"Room A-1\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/scheduling/appointments" } },
+				{ "name": "Cancel Appointment", "request": { "method": "DELETE", "url": "{{baseUrl}}/api/v1/scheduling/appointments/1" } }
+			]
+		},
+		{
+			"name": "3. ASHUTOSH: Patient Management",
+			"item": [
+				{ "name": "List All Patients", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/patients" } },
+				{ "name": "Get Patient Detail", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/patients/1001" } },
+				{ "name": "Register Patient", "request": { "method": "POST", "body": { "mode": "raw", "raw": "{\n  \"ssn\": 1001,\n  \"name\": \"John Doe\",\n  \"address\": \"123 Main St\",\n  \"phone\": \"555-0101\",\n  \"insuranceId\": \"INS-123\",\n  \"pcpId\": 101\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/patients" } }
+			]
+		},
+		{
+			"name": "4. ADITYA REDDY: Clinical & Medication",
+			"item": [
+				{ "name": "Medication Catalog", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/clinical/medications" } },
+				{ "name": "New Prescription", "request": { "method": "POST", "body": { "mode": "raw", "raw": "{\n  \"physicianId\": 101,\n  \"patientSsn\": 1001,\n  \"medicationCode\": 601,\n  \"date\": \"2026-04-18T12:00:00\",\n  \"dose\": \"500mg twice daily\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/clinical/prescriptions" } },
+				{ "name": "Patient Prescription History", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/clinical/prescriptions/patient/1001" } }
+			]
+		},
+		{
+			"name": "5. AYUSH YEDE: Infrastructure",
+			"item": [
+				{ "name": "List Rooms", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/infrastructure/rooms" } },
+				{ "name": "Available Rooms", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/infrastructure/rooms/available" } },
+				{ "name": "Add Room", "request": { "method": "POST", "body": { "mode": "raw", "raw": "{\n  \"roomNumber\": 101,\n  \"roomType\": \"General\",\n  \"blockFloor\": 1,\n  \"blockCode\": 1,\n  \"unavailable\": false\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/infrastructure/rooms" } }
+			]
+		},
+		{
+			"name": "6. ADITYA: Nursing",
+			"item": [
+				{ "name": "Nurse Registry", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/nurses" } },
+				{ "name": "Onboard Nurse", "request": { "method": "POST", "body": { "mode": "raw", "raw": "{\n  \"employeeId\": 201,\n  \"name\": \"Nurse Joy\",\n  \"position\": \"Pediatrics\",\n  \"registered\": true,\n  \"ssn\": 112233\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/nurses" } }
+			]
+		}
+	],
+	"variable": [
+		{ "key": "baseUrl", "value": "http://localhost:8080" }
+	]
+}
